@@ -1,5 +1,48 @@
 ---
 title: "DHFP-Project"
+author: "Abdalla Mohamed"
+Date: "15/02/2026"
 format: html
 ---
 
+Project Goal:
+
+
+The Dataset:
+
+
+```{r, Reading data}
+investments_VC <- read.csv("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/investments_VC.csv")
+
+summary(investments_VC)
+```
+
+```{r, Exploration}
+table(investments_VC$status)
+
+table(investments_VC$funding_rounds)
+```
+
+```{r, data preparation}
+sort(table(investments_VC$country_code), decreasing = TRUE)
+
+
+```
+
+```{r,}
+df_rounds <- as.data.frame(table(investments_VC$funding_rounds))
+
+library(plotly)
+plot_ly(
+  data = df_rounds, 
+  x = ~Var1, 
+  y = ~Freq, 
+  type = 'bar',
+  marker = list(color = 'rgba(100, 150, 250, 0.7)')
+) %>%
+  layout(
+    title = "Distribution of Funding Rounds",
+    xaxis = list(title = "Number of Rounds"),
+    yaxis = list(title = "Count of Companies")
+  )
+```
