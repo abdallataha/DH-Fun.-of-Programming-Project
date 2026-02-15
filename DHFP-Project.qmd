@@ -31,18 +31,69 @@ sort(table(investments_VC$country_code), decreasing = TRUE)
 
 ```{r,}
 df_rounds <- as.data.frame(table(investments_VC$funding_rounds))
+colnames(df_rounds) <- c("Rounds", "Company_Count")
 
-library(plotly)
-plot_ly(
-  data = df_rounds, 
-  x = ~Var1, 
-  y = ~Freq, 
-  type = 'bar',
-  marker = list(color = 'rgba(100, 150, 250, 0.7)')
-) %>%
-  layout(
-    title = "Distribution of Funding Rounds",
-    xaxis = list(title = "Number of Rounds"),
-    yaxis = list(title = "Count of Companies")
-  )
+bp <- barplot(
+  Company_Count ~ Rounds, data = df_rounds,
+  col = "lightskyblue", border = FALSE,
+  main = "Funding Rounds Distribution",
+  xlab = "Number of Rounds", ylab = "Count of Companies",
+  ylim = c(0, max(df_rounds$Company_Count) * 1.2))
+
+text(x = bp, y = df_rounds$Company_Count, labels = df_rounds$Company_Count, 
+     pos = 3, 
+     cex = 0.8, col = "black")
 ```
+
+```{r, integration of countries names}
+# To know the full name of countries, I downloaded another table but in xlsx, so I tried to read with read.table or read.csv but it didn't work, so I am using readxl library
+?readxl::read_excel()
+
+Countries <- readxl::read_excel("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/3Letters_Countries.xlsx", col_names = FALSE)
+
+# Merging the two tables
+investments_VC <- merge(investments_VC, Countries[, c("...1", "...3")],
+                        by.x = "country_code", by.y = "...3", all.x = TRUE)
+
+# Renaming the newly added column to "Country"
+names(investments_VC)[names(investments_VC) == "...1"] <- "Country"
+
+investments_VC1 <- investments_VC
+```
+
+```{r}
+# After adding the countries, I realized that there could be ready-made libraries that already do this task, so I installed and used them in the next steps to add more demographic information for the project.
+
+library(countrycode)
+?countrycode()
+
+# I am using countrycode specifically because it contains the region, gapminder didn't have regions, but I will use it later as it has more demographic features.
+investments_VC1$Continent <- countrycode(sourcevar = investments_VC$country_code,
+                                        origin = "iso3c",
+                                        destination = "continent")
+
+investments_VC1$Region <- countrycode(sourcevar = investments_VC$country_code,
+                                     origin = "iso3c",
+                                     destination = "region")
+
+
+install.packages("WDI")
+library(WDI)
+?WDI
+
+recent_data <- WDI(country = "all", indicator = c(
+    "gdpPercap" = "NY.GDP.PCAP.PP.KD", "pop" = "SP.POP.TOTL", 
+    "lifeExp" = "SP.DYN.LE00.IN"), start = 2000, end = 2026, extra = TRUE)
+
+recent_data23 <- recent_data[recent_data$year == 2023, ] 
+
+# Subsetting aggregate regions (like "Arab World") to keep only countries and NA values
+recent_data23_agg <- recent_data23[recent_data23$region == "Aggregates" & !is.na(recent_data23$region), ]
+
+# Remove aggregate regions and NA values
+recent_data23 <- recent_data23[recent_data23$region != "Aggregates" & !is.na(recent_data23$region), ]
+
+# Merging the demographic columns from WDI to investment_VC1
+investments_VC1 <- merge(x = investments_VC1, y = recent_data23[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income", "lending")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
+```
+
