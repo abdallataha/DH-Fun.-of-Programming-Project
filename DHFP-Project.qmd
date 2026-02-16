@@ -5,60 +5,37 @@ Date: "15/02/2026"
 format: html
 ---
 
-Project Goal:
+Project Goal: I would like to find the factors that help company to be operating / closed / acquired stage.
 
-
-The Dataset:
-
+The Dataset: Information about startup companies and investment via Crunchbase. The investments series at a company level are given. The company status are given. The main dataset is 54294 rows * 39 columns. The demographics will be merged from different databases to find unexpected patterns.
 
 ```{r, Reading data}
 investments_VC <- read.csv("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/investments_VC.csv")
 
-summary(investments_VC)
+df_invest = data.frame(investments_VC)
+
+summary(df_invest)
 ```
 
 ```{r, Exploration}
-table(investments_VC$status)
+table(df_invest$status)
 
-table(investments_VC$funding_rounds)
+table(df_invest$funding_rounds)
+
+df_invest <- df_invest[!is.na(df_invest$funding_rounds) & df_invest$funding_rounds != "", ]
 ```
-
-```{r, data preparation}
-sort(table(investments_VC$country_code), decreasing = TRUE)
-
-
-```
-
-```{r,}
-df_rounds <- as.data.frame(table(investments_VC$funding_rounds))
-colnames(df_rounds) <- c("Rounds", "Company_Count")
-
-bp <- barplot(
-  Company_Count ~ Rounds, data = df_rounds,
-  col = "lightskyblue", border = FALSE,
-  main = "Funding Rounds Distribution",
-  xlab = "Number of Rounds", ylab = "Count of Companies",
-  ylim = c(0, max(df_rounds$Company_Count) * 1.2))
-
-text(x = bp, y = df_rounds$Company_Count, labels = df_rounds$Company_Count, 
-     pos = 3, 
-     cex = 0.8, col = "black")
-```
-
 ```{r, integration of countries names}
 # To know the full name of countries, I downloaded another table but in xlsx, so I tried to read with read.table or read.csv but it didn't work, so I am using readxl library
-?readxl::read_excel()
+library("readxl")
+#?read_excel()
 
-Countries <- readxl::read_excel("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/3Letters_Countries.xlsx", col_names = FALSE)
+Countries <- read_excel("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/3Letters_Countries.xlsx", col_names = c("country_name", "iso_alpha2", "iso_alpha3", "country_code"))
 
 # Merging the two tables
-investments_VC <- merge(investments_VC, Countries[, c("...1", "...3")],
-                        by.x = "country_code", by.y = "...3", all.x = TRUE)
+df_invest <- merge(df_invest, Countries[, c("country_name", "iso_alpha3")], by.x = "country_code", by.y = "iso_alpha3", all.x = TRUE)
 
-# Renaming the newly added column to "Country"
-names(investments_VC)[names(investments_VC) == "...1"] <- "Country"
-
-investments_VC1 <- investments_VC
+# Making a copy VC1 to add more demographics safely
+df_invest_cp <- df_invest
 ```
 
 ```{r}
@@ -68,16 +45,16 @@ library(countrycode)
 ?countrycode()
 
 # I am using countrycode specifically because it contains the region, gapminder didn't have regions, but I will use it later as it has more demographic features.
-investments_VC1$Continent <- countrycode(sourcevar = investments_VC$country_code,
+df_invest_cp$Continent <- countrycode(sourcevar = df_invest_cp$country_code,
                                         origin = "iso3c",
                                         destination = "continent")
 
-investments_VC1$Region <- countrycode(sourcevar = investments_VC$country_code,
+df_invest_cp$Region <- countrycode(sourcevar = df_invest_cp$country_code,
                                      origin = "iso3c",
                                      destination = "region")
 
 
-install.packages("WDI")
+# install.packages("WDI")
 library(WDI)
 ?WDI
 
@@ -94,6 +71,9 @@ recent_data23_agg <- recent_data23[recent_data23$region == "Aggregates" & !is.na
 recent_data23 <- recent_data23[recent_data23$region != "Aggregates" & !is.na(recent_data23$region), ]
 
 # Merging the demographic columns from WDI to investment_VC1
-investments_VC1 <- merge(x = investments_VC1, y = recent_data23[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income", "lending")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
+df_invest_cp <- merge(x = df_invest_cp, y = recent_data23[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income", "lending")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
 ```
 
+```{r, exploring demographics}
+table(df_invest_cp$Region)
+```
