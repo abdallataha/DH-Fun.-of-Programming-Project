@@ -12,37 +12,50 @@ The Dataset: Information about startup companies and investment via Crunchbase. 
 ```{r, Reading data}
 investments_VC <- read.csv("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/investments_VC.csv")
 
-df_invest = data.frame(investments_VC)
+df = data.frame(investments_VC)
 
-summary(df_invest)
+summary(df)
 ```
+# Cleaning the dataset from NA and empty rows depending on funding rounds column, then continue exploration.
 
 ```{r, Exploration}
+df_invest <- df[!is.na(df$funding_rounds) & df$funding_rounds != "", ]
+
+# Call save_csv function to save the cleaned file 
+source("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/Functions/save_csv.R")
+
+# Saving the file
+save_csv(df_invest, "df_invest.csv")
+
 table(df_invest$status)
 
 table(df_invest$funding_rounds)
-
-df_invest <- df_invest[!is.na(df_invest$funding_rounds) & df_invest$funding_rounds != "", ]
 ```
+
+To know the full name of countries, I downloaded another table but in xlsx, so I tried to read with read.table or read.csv but it didn't work, so I am using readxl library
+
 ```{r, integration of countries names}
-# To know the full name of countries, I downloaded another table but in xlsx, so I tried to read with read.table or read.csv but it didn't work, so I am using readxl library
 library("readxl")
 #?read_excel()
 
+# Reading the complementary excel file and rename its columns to improve readability
 Countries <- read_excel("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/3Letters_Countries.xlsx", col_names = c("country_name", "iso_alpha2", "iso_alpha3", "country_code"))
 
 # Merging the two tables
 df_invest <- merge(df_invest, Countries[, c("country_name", "iso_alpha3")], by.x = "country_code", by.y = "iso_alpha3", all.x = TRUE)
 
-# Making a copy VC1 to add more demographics safely
+# Making a copy cp to add more demographics safely
 df_invest_cp <- df_invest
+
+# Saving the resulted merged dataset as df_invest_cp
+save_csv(df_invest, "df_invest_cp.csv")
 ```
 
 ```{r}
 # After adding the countries, I realized that there could be ready-made libraries that already do this task, so I installed and used them in the next steps to add more demographic information for the project.
 
 library(countrycode)
-?countrycode()
+#?countrycode()
 
 # I am using countrycode specifically because it contains the region, gapminder didn't have regions, but I will use it later as it has more demographic features.
 df_invest_cp$Continent <- countrycode(sourcevar = df_invest_cp$country_code,
@@ -56,22 +69,30 @@ df_invest_cp$Region <- countrycode(sourcevar = df_invest_cp$country_code,
 
 # install.packages("WDI")
 library(WDI)
-?WDI
+#?WDI
 
-recent_data <- WDI(country = "all", indicator = c(
+World_Demographics <- WDI(country = "all", indicator = c(
     "gdpPercap" = "NY.GDP.PCAP.PP.KD", "pop" = "SP.POP.TOTL", 
     "lifeExp" = "SP.DYN.LE00.IN"), start = 2000, end = 2026, extra = TRUE)
 
-recent_data23 <- recent_data[recent_data$year == 2023, ] 
+save_csv(World_Demographics, "World_Demographics.csv")
 
+# By checking the data, 2023 is the last year even it is updated in 2026
+World_Demographics23 <- World_Demographics[World_Demographics$year == 2023, ] 
 # Subsetting aggregate regions (like "Arab World") to keep only countries and NA values
-recent_data23_agg <- recent_data23[recent_data23$region == "Aggregates" & !is.na(recent_data23$region), ]
+World_Demographics23_agg <- World_Demographics23[World_Demographics23$region == "Aggregates" & !is.na(World_Demographics23$region), ]
+
+save_csv(World_Demographics23_agg, "World_Demographics23_agg.csv")
 
 # Remove aggregate regions and NA values
-recent_data23 <- recent_data23[recent_data23$region != "Aggregates" & !is.na(recent_data23$region), ]
+World_Demographics23 <- World_Demographics23[World_Demographics23$region != "Aggregates" & !is.na(World_Demographics23$region), ]
+
+save_csv(World_Demographics23, "World_Demographics23.csv")
 
 # Merging the demographic columns from WDI to investment_VC1
-df_invest_cp <- merge(x = df_invest_cp, y = recent_data23[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income", "lending")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
+df_invest_cp <- merge(x = df_invest_cp, y = World_Demographics[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income", "lending")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
+
+save_csv(df_invest_cp, "df_invest_fullmerged.csv")
 ```
 
 ```{r, exploring demographics}
