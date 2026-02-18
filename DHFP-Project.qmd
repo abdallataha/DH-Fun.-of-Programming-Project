@@ -16,46 +16,45 @@ df = data.frame(investments_VC)
 
 summary(df)
 ```
-# Cleaning the dataset from NA and empty rows depending on funding rounds column, then continue exploration.
+By checking the columns, it is obvious it needs cleaning. So, in the next step, I am going to clean the dataset from 4856 NA and empty rows depending on funding rounds column, then I will continue exploration.
 
 ```{r, Exploration}
 df_invest <- df[!is.na(df$funding_rounds) & df$funding_rounds != "", ]
 
-# Call save_csv function to save the cleaned file 
-source("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/Functions/save_csv.R")
+# Call save_csv function to save the cleaned file (I asked AI how to call the function from a folder)
+source("Functions/save_csv.R")
 
 # Saving the file
-save_csv(df_invest, "df_invest.csv")
+save_csv(df_invest, "raw_data_large/df_invest.csv")
 
 table(df_invest$status)
 
 table(df_invest$funding_rounds)
 ```
 
-To know the full name of countries, I downloaded another table but in xlsx, so I tried to read with read.table or read.csv but it didn't work, so I am using readxl library
+To know the full name of countries to improve readability of the analysis, I downloaded another table but in xlsx, so I tried to read with read.table or read.csv but it didn't work, so I am using readxl library I found according to external google search, it is mentioned also in P. 204 in R material after checking its documentation.
 
 ```{r, integration of countries names}
 library("readxl")
 #?read_excel()
 
 # Reading the complementary excel file and rename its columns to improve readability
-Countries <- read_excel("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/3Letters_Countries.xlsx", col_names = c("country_name", "iso_alpha2", "iso_alpha3", "country_code"))
+Countries <- read_excel("Raw_complementary_dataset/3Letters_Countries.xlsx", col_names = c("country_name", "2L_code", "3L_code", "country_code"))
 
 # Merging the two tables
-df_invest <- merge(df_invest, Countries[, c("country_name", "iso_alpha3")], by.x = "country_code", by.y = "iso_alpha3", all.x = TRUE)
+df_invest <- merge(df_invest, Countries[, c("country_name", "3L_code")], by.x = "country_code", by.y = "3L_code", all.x = TRUE)
 
 # Making a copy cp to add more demographics safely
 df_invest_cp <- df_invest
 
 # Saving the resulted merged dataset as df_invest_cp
-save_csv(df_invest, "df_invest_cp.csv")
+save_csv(df_invest, "Cleaned_dataset/df_invest_cp.csv")
 ```
+After adding the countries, I realized that there could be ready-made libraries that already do this task, so I installed and used them in the next steps to add more demographic information for the project. But I didn't remove the last merged dataset to keep implementing the concept of integrating multiple datasets.
 
 ```{r}
-# After adding the countries, I realized that there could be ready-made libraries that already do this task, so I installed and used them in the next steps to add more demographic information for the project.
-
 library(countrycode)
-#?countrycode()
+?countrycode()
 
 # I am using countrycode specifically because it contains the region, gapminder didn't have regions, but I will use it later as it has more demographic features.
 df_invest_cp$Continent <- countrycode(sourcevar = df_invest_cp$country_code,
@@ -67,35 +66,125 @@ df_invest_cp$Region <- countrycode(sourcevar = df_invest_cp$country_code,
                                      destination = "region")
 ```
 
+I still need more demographics data for comparisons. I need regions like "Middle East", population, GDP per capita and the economics status, so I searched, and found World Development Indicators (World Bank) in WDI library.
 ```{r, Downloading World}
 # install.packages("WDI")
 library(WDI)
 ?WDI
 
 World_Demographics <- WDI(country = "all", indicator = c(
-    "gdpPercap" = "NY.GDP.PCAP.PP.KD", "pop" = "SP.POP.TOTL", 
-    "lifeExp" = "SP.DYN.LE00.IN"), start = 2000, end = 2026, extra = TRUE)
+    "gdpPercap" = "NY.GDP.PCAP.KD", "pop" = "SP.POP.TOTL", "lifeExp" = "SP.DYN.LE00.IN"), start = 2000, end = 2026, extra = TRUE)
 
-save_csv(World_Demographics, "World_Demographics.csv")
+save_csv(World_Demographics, "Merged_data/World_Demographics.csv")
 
 # By checking the data, 2023 is the last year even it is updated in 2026
 World_Demographics23 <- World_Demographics[World_Demographics$year == 2023, ] 
-# Subsetting aggregate regions (like "Arab World") to keep only countries and NA values
+# Subsetting aggregate regions (like "Middle East") to keep only countries and NA values
 World_Demographics23_agg <- World_Demographics23[World_Demographics23$region == "Aggregates" & !is.na(World_Demographics23$region), ]
 
-save_csv(World_Demographics23_agg, "World_Demographics23_agg.csv")
+save_csv(World_Demographics23_agg, "Merged_data/World_Demographics23_agg.csv")
 
 # Remove aggregate regions and NA values
 World_Demographics23 <- World_Demographics23[World_Demographics23$region != "Aggregates" & !is.na(World_Demographics23$region), ]
 
-save_csv(World_Demographics23, "World_Demographics23.csv")
+save_csv(World_Demographics23, "Merged_data/World_Demographics23.csv")
 
-# Merging the demographic columns from WDI to the cleaned df_invest_cp with inner join to ensure that all the data now has demographics
-df_invest_cp <- merge(x = df_invest_cp, y = World_Demographics23[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income", "lending")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
+# Merging the demographic columns from WDI to the cleaned df_invest_cp with inner join to ensure that all the data now has demographics but I need to remove region column first from df_invest_cp
+df_invest_cp <- df_invest_cp[,-10]
+df_invest_cp <- merge(x = df_invest_cp, y = World_Demographics23[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
 
-save_csv(df_invest_cp, "df_invest_fullmerged.csv")
+save_csv(df_invest_cp, "Merged_data/df_invest_fullmerged.csv")
 ```
 
-```{r, exploring demographics}
-table(df_invest_cp$Region)
+```{r, continue exploring demographics}
+str(df_invest_cp)
+
+# 2nd stage of Cleaning by converting some columns wrong datatypes like funding_total_usd by removing commas and spaces, then converting to numeric (I found that R turns "-" into NA automatically, and I used this.)
+df_invest_cp$funding_total_usd <- gsub("[, ]", "", df_invest_cp$funding_total_usd)
+df_invest_cp$funding_total_usd <- as.numeric(df_invest_cp$funding_total_usd)
+
+# Converting coordinates to numeric
+df_invest_cp$longitude <- as.numeric(df_invest_cp$longitude)
+df_invest_cp$latitude  <- as.numeric(df_invest_cp$latitude)
+
+# Converting all dates using as.Date with specific formate in the month to get the month name. This formate is in the lectures P. 118. It will be useful later in visualization to show the months names.
+df_invest_cp$founded_at       <- as.Date(df_invest_cp$founded_at)
+df_invest_cp$first_funding_at <- as.Date(df_invest_cp$first_funding_at)
+df_invest_cp$last_funding_at  <- as.Date(df_invest_cp$last_funding_at)
+df_invest_cp$month_name <- format(df_invest_cp$founded_at, "%B")
+
+# Factorizing the quarter for easier visualization
+df_invest_cp$founded_quarter <- as.factor(substr(df_invest_cp$founded_quarter, 6, 7))
+
+save_csv(df_invest_cp, "Merged_data/df_invest_fm_c.csv")
 ```
+Now, I want to know how are startups distributed across Continents?
+
+```{r, visualizations}
+# A place to start from to avoid running the whole code over and over
+df_invest_cp <- read.csv("Merged_data/df_invest_fm_c.csv")
+
+source("Functions/visual.R")
+
+# Answering the startups distribution question
+visual(type = "bar", x = table(df_invest_cp$Continent), 
+       title = "Startups by Continent", xlab = "", ylab = "Number of Companies")
+```
+It is obvious that Americas are the continent of the startups followed by Europe.
+
+But, is there a specific month for starting a business? is there a hidden pattern regardless the reasons?
+
+```{r}
+# Order the months so they don't appear alphabetically
+visual(type = "bar", x = table(df_invest_cp$month_name), 
+       title = "Foundation Frequency by Month", xlab = "Month Name", 
+       ylab = "Total Foundations")
+```
+Results shows that January is weirdly the month of founding a startup! 
+
+Does this mean that Q1 will be the highest quarter of founding a startup?
+```{r}
+visual(type = "bar", x = table(df_invest_cp$founded_quarter),
+  title = "Number of Startups Founded by Quarter", xlab = "Quarter",
+  ylab = "Count of Startups")
+```
+Yes, as expected, Q1 is the highest, but this graph shows an opportunity to fill the missing 8701 points as we have the month name then I will check it again.
+
+```{r}
+# I tried nested ifelse and it worked, may be not the best way, but it is readable.
+df_invest_cp$founded_quarter <- ifelse(df_invest_cp$month_name %in% c("January", "February", "March"), "Q1", 
+                                       ifelse(df_invest_cp$month_name %in% c("April", "May", "June"), "Q2", 
+                                              ifelse(df_invest_cp$month_name %in% c("July", "August", "September"), "Q3", 
+                                                     ifelse(df_invest_cp$month_name %in% c("October", "November", "December"), "Q4", NA))))
+```
+
+After rerunning the plotting function again, it shows clearly that all the missing quarters are filled now and Q1 is still the main quarter.
+
+Let's check the most common status of companies in this dataset?
+
+```{r}
+visual(type = "bar", x = table(df_invest_cp$status),
+       title = "Current Company Status", xlab = "Status", ylab = "Count")
+```
+Most of the startups are "operating" but there are more than 1108 companies without a status also. I thought removing them will unnecesserilly decrease the dataset as these startups could represent some marginalized regions.
+
+So, let's find if the number of funding rounds increase with a country's GDP or not to understand the economic impact!
+
+```{r}
+# Very transparent to handle the 44k data points
+visual(type = "scatter", x = df_invest_cp$gdpPercap, 
+       y = df_invest_cp$funding_rounds, 
+       title = "Country Wealth vs. Investment Rounds", 
+       xlab = "GDP per Capita", ylab = "Number of Funding Rounds", col = "red")
+```
+
+Yes, it is affecting the low GDP countries, but also affects the high GDP countries. I think that high GDP countries citizens aren't very interested in making startups or may be the higher level of regulations hinder them. The explanation needs more investigation from my opinion.
+
+Let's find how many funding rounds do companies usually go through?
+```{r}
+visual(type = "bar", x =round((table(df_invest_cp$funding_rounds) / sum(table(df_invest_cp$funding_rounds))) * 100,1),
+  title = "Distribution of Funding Rounds", xlab = "Number of Rounds",
+  ylab  = "Percentage of Companies (%)",
+  col = "yellow")
+```
+It is clear that less than the third of the startups that got their first round, will go through a second one, but this gap narrowed after that from the third to almost the half.
