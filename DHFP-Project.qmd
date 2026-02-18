@@ -5,12 +5,12 @@ Date: "15/02/2026"
 format: html
 ---
 
-Project Goal: I would like to find the factors that help company to be operating / closed / acquired stage.
+Project Goal: A try to find the factors that help company to be operating / closed / acquired stage.
 
 The Dataset: Information about startup companies and investment via Crunchbase. The investments series at a company level are given. The company status are given. The main dataset is 54294 rows * 39 columns. The demographics will be merged from different databases to find unexpected patterns.
 
 ```{r, Reading data}
-investments_VC <- read.csv("F:/Digital Health Master's Potsdam/1st Semester DH/Fundmentals of Programming R/Project/investments_VC.csv")
+investments_VC <- read.csv("raw_data_large/investments_VC.csv")
 
 df = data.frame(investments_VC)
 
