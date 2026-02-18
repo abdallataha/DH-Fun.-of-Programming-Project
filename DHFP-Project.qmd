@@ -171,7 +171,6 @@ Most of the startups are "operating" but there are more than 1108 companies with
 So, let's find if the number of funding rounds increase with a country's GDP or not to understand the economic impact!
 
 ```{r}
-# Very transparent to handle the 44k data points
 visual(type = "scatter", x = df_invest_cp$gdpPercap, 
        y = df_invest_cp$funding_rounds, 
        title = "Country Wealth vs. Investment Rounds", 
