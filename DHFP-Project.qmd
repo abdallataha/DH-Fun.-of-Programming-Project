@@ -65,11 +65,12 @@ df_invest_cp$Continent <- countrycode(sourcevar = df_invest_cp$country_code,
 df_invest_cp$Region <- countrycode(sourcevar = df_invest_cp$country_code,
                                      origin = "iso3c",
                                      destination = "region")
+```
 
-
+```{r, Downloading World}
 # install.packages("WDI")
 library(WDI)
-#?WDI
+?WDI
 
 World_Demographics <- WDI(country = "all", indicator = c(
     "gdpPercap" = "NY.GDP.PCAP.PP.KD", "pop" = "SP.POP.TOTL", 
@@ -89,8 +90,8 @@ World_Demographics23 <- World_Demographics23[World_Demographics23$region != "Agg
 
 save_csv(World_Demographics23, "World_Demographics23.csv")
 
-# Merging the demographic columns from WDI to investment_VC1
-df_invest_cp <- merge(x = df_invest_cp, y = World_Demographics[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income", "lending")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
+# Merging the demographic columns from WDI to the cleaned df_invest_cp with inner join to ensure that all the data now has demographics
+df_invest_cp <- merge(x = df_invest_cp, y = World_Demographics23[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income", "lending")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
 
 save_csv(df_invest_cp, "df_invest_fullmerged.csv")
 ```
