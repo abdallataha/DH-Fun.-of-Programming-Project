@@ -21,8 +21,9 @@ By checking the columns, it is obvious it needs cleaning. So, in the next step, 
 ```{r, Exploration}
 df_invest <- df[!is.na(df$funding_rounds) & df$funding_rounds != "", ]
 
-# Call save_csv function to save the cleaned file (I asked AI 
-# how to call the function from a folder)
+# Calling the save_csv function to save the cleaned file (I asked AI 
+# how to call the function from a folder) 
+# but later, I find it in lectures
 source("Functions/save_csv.R")
 
 # Saving the file
@@ -36,12 +37,21 @@ table(df_invest$funding_rounds)
 To know the full name of countries to improve readability of the analysis, I downloaded another table but in xlsx, so I tried to read with read.table or read.csv but it didn't work, so I am using readxl library I found according to external google search, it is mentioned also in P. 204 in R material after checking its documentation.
 
 ```{r, integration of countries names}
-library("readxl")
+if(!requireNamespace("readxl", quietly=TRUE)) install.packages("readxl")
 #?read_excel()
+
+# ROU is the current official ISO 3166-1 alpha-3 country code for Romania. 
+# It replaced the former code, ROM, in February 2002 to avoid confusion with
+# the Roma people. ROU is also used by the International Olympic Committee
+# (IOC). ROM is now considered a transitionally reserved, deprecated code. 
+# So, the first step, replacing "ROM" code with "ROU"
+# Also, add NA instead of empty cells to avoid unambiguous unmatches
+df_invest$country_code[df_invest$country_code == "ROM"] <- "ROU"
+df_invest$country_code[df_invest$country_code == ""] <- NA
 
 # Reading the complementary excel file and rename its columns to 
 # improve readability
-Countries <- read_excel("Raw_complementary_dataset/3Letters_Countries.xlsx", col_names = c("country_name", "2L_code", "3L_code", "country_code"))
+Countries <- readxl::read_excel("Raw_complementary_dataset/3Letters_Countries.xlsx", col_names = c("country_name", "2L_code", "3L_code", "country_code"))
 
 # Merging the two tables
 df_invest <- merge(df_invest, Countries[, c("country_name", "3L_code")], 
@@ -56,37 +66,27 @@ save_csv(df_invest, "Cleaned_dataset/df_invest_cp.csv")
 After adding the countries, I realized that there could be ready-made libraries that already do this task, so I installed and used them in the next steps to add more demographic information for the project. But I didn't remove the last merged dataset to keep implementing the concept of integrating multiple datasets.
 
 ```{r, Adding the region and the continent}
-library(countrycode)
+if(!requireNamespace("countrycode", quietly=TRUE)) install.packages("countrycode")
 #?countrycode()
 
-# I am using countrycode specifically because it contains the region, gapminder didn't have regions.
-df_invest_cp$Continent <- countrycode(sourcevar = df_invest_cp$country_code,
-                                        origin = "iso3c",
-                                        destination = "continent")
+# I am using countrycode specifically because it contains the region
+df_invest_cp$Continent <- countrycode::countrycode(sourcevar = df_invest_cp$country_code, origin = "iso3c", destination = "continent")
 
-df_invest_cp$Region <- countrycode(sourcevar = df_invest_cp$country_code,
-                                     origin = "iso3c",
-                                     destination = "region")
+df_invest_cp$Region <- countrycode::countrycode(sourcevar = df_invest_cp$country_code, origin = "iso3c", destination = "region")
 ```
 
 I still need more demographics data for comparisons. I need regions like "Middle East", population, GDP per capita and the economics status, so I searched, and found World Development Indicators (World Bank) in WDI library.
 ```{r, Mergin World Development Indicators (World Bank)}
-# install.packages("WDI")
-library(WDI)
+if(!requireNamespace("WDI", quietly=TRUE)) install.packages("WDI")
 #?WDI
 
-World_Demographics <- WDI(country = "all", indicator = c(
+World_Demographics <- WDI::WDI(country = "all", indicator = c(
     "gdpPercap" = "NY.GDP.PCAP.KD", "pop" = "SP.POP.TOTL", "lifeExp" = "SP.DYN.LE00.IN"), start = 2023, end = 2026, extra = TRUE)
 
 save_csv(World_Demographics, "Merged_data/World_Demographics.csv")
 
 # By checking the data, 2023 is the last year even it is updated in 2026
 World_Demographics23 <- World_Demographics[World_Demographics$year == 2023, ] 
-# Subsetting aggregate regions (like "Middle East") to keep only 
-# countries and NA values
-World_Demographics23_agg <- World_Demographics23[World_Demographics23$region == "Aggregates" & !is.na(World_Demographics23$region), ]
-
-save_csv(World_Demographics23_agg, "Merged_data/World_Demographics23_agg.csv")
 
 # Remove aggregate regions and NA values
 World_Demographics23 <- World_Demographics23[World_Demographics23$region != "Aggregates" & !is.na(World_Demographics23$region), ]
@@ -144,21 +144,24 @@ df_invest_cp <- read.csv("Merged_data/df_invest_fm_c.csv")
 source("Functions/visual.R")
 
 # Answering the startups distribution question
-par(mgp = c(4, 1, 0), mar = c(7, 6, 4, 2))
+par1 = par(mgp = c(4, 1, 0), mar = c(3, 6, 4, 2))
 
-visual(type = "bar", x = sort(table(df_invest_cp$Continent), decreasing = TRUE), title = "Startups by Continent", xlab = "", ylab = "Number of Companies")
+visual(type = "bar", x = sort(table(df_invest_cp$Continent), decreasing = TRUE), title = "Startups by Continent", ylab = "Number of Startups")
 ```
 It is obvious that Americas are the continent of the startups followed by Europe, and ended by Africa.
 
 But, is there a specific month for starting a business? is there a hidden pattern regardless the reasons?
 
-```{r}
-# Order the months
+```{r, Visualizing the distribution of Startups foundation by Month}
+# Ordering the months first
 df_invest_cp$month_name <- factor(df_invest_cp$month_name, levels = month.name)
 
-visual(type = "bar", x = table(df_invest_cp$month_name), 
-       title = "Foundation Frequency by Month", xlab = "Month Name", 
+{
+  par2 = par(mgp = c(4, 1, 0), mar = c(7, 6, 4, 2))
+  visual(type = "bar", x = table(df_invest_cp$month_name), 
+       title = "Number of Founded Startups", xlab = "Month Name", 
        ylab = "Total Foundations", las = 2)
+}
 ```
 Results shows that January is weirdly the month of founding a startup! May be some startups consider it representing the whole year.
 
@@ -220,12 +223,14 @@ visual(type = "scatter", x = df_invest_cp$gdpPercap,
 Yes, it is affecting the low GDP countries, but also affects the high GDP countries. I think that high GDP countries citizens aren't very interested in filling the requirements of the usual funding rounds of startups or may be the higher level of regulations hinder them, or may be got acquired after less number of rounds. The explanation needs more investigation from my opinion to find the confounding factor.
 
 Let's find how many funding rounds do companies usually go through?
+
 ```{r, Visualizing Percentage of companies per funding rounds}
-# This visualization needs the calculation of the cumulative sum
+# After thinking for some time, this visualization needs 
+# the calculation of the cumulative sum
 counts <- table(df_invest_cp$funding_rounds)
 total_startups <- sum(counts)
 
-# Calculate how many "dropped out" at each stage
+# Calculate how many dropped out at each stage
 dropped_out <- cumsum(counts)
 
 # Subtracting the total startups number from each round acc. sum
@@ -250,9 +255,37 @@ par(mgp = c(4, 1, 0), mar = c(10, 6, 4, 2))
   visual(type = "bar", 
          x = mean_funding, ylab = "Mean funding by 100K",
          title = "Mean Funding by Income Group", las = 2)
-  
-  }
+}
 ```
+It is misleading to get conclusion from this graph only, but knowing the population of these economic categories would reveal a lot.
+
+```{r, Checking the contradiction behind startups funding to economy}
+# Calculate the mean funding for each category
+mean_funding <- aggregate(funding_total_usd ~ income, data = df_invest_cp, 
+                          FUN = mean)
+
+# Get the population for each category (assuming it is a unique value per category)
+pop_by_income <- aggregate(pop ~ income, 
+                           data = unique(df_invest_cp[, c("country_code",
+                                                          "income", "pop")]), 
+                           FUN = sum)
+
+# Merging both tables and divide
+final_result <- merge(mean_funding, pop_by_income, by = "income")
+final_result$fund_access <- round(final_result$funding_total_usd / final_result$pop, 4)
+final_result <- final_result[order(final_result$fund_access, decreasing = TRUE), ]
+
+{
+  par(mgp = c(4, 1, 0), mar = c(10, 6, 4, 2))
+  visual(type = "bar", x = sort(tapply(final_result$fund_access,
+                                  final_result$income, unique), 
+                                decreasing = TRUE), 
+         ylab = "Fund accessibility for startups", 
+         title = "Startups Funding Access Per Economy", las = 2)
+}
+```
+This ensures that the accessibility to fund to High income countries is higher than the low income countries according regarding population. It is the douplicated in "High income" countries than "Low income" countries.
+
 Now, I want to predict the success of the Startups. The success here means the startup got acquired by another company. The failure here is closed startup.
 
 ```{r, Preparing data for model}
@@ -296,25 +329,22 @@ Founded Year coefficient is highly negative. This means, as the year goes up (ne
 
 Surprisingly, higher seed funding has a tiny but statistically significant negative impact on the probability of acquisition in this model. This could imply that companies that highly depend on seed without moving to venture are less likely to exit.
 
-```{r}
+```{r, Producing the matrix of predictions}
 exit_preds <- predict(exit_model, df_exited, type = "response")
 exit_class <- ifelse(exit_preds > 0.5, 1, 0)
 table(Predicted = exit_class, Actual = df_exited$is_success)
 ```
 
-```{r}
-TN <- 674 
-FN <- 336
-FP <- 802
-TP <- 2184
+```{r, Calculating the accuracy}
+conf_matrix <- table(Predicted = exit_class, Actual = df_exited$is_success)
 
 # Calculating Accuracy
 # Formula: (True Positives + True Negatives) / Total
-accuracy <- (TP + TN) / (TN + FN + FP + TP)
-paste0(round(accuracy*100,2) , "%")
+accuracy <- sum(diag(conf_matrix)) / sum(conf_matrix)
+paste0("Accuracy of the model is: ", round(accuracy * 100, 2), "%")
 ```
 
-```{r}
+```{r, Visualizing the comparison between Acquired vs Closed}
 # Comparison of the predicted probabilities of the two groups
 visual(type = "box", x = exit_preds, y = df_exited$is_success, range = 0,
         title = "Predicted Probability: Acquired (1) vs Closed (0)",
@@ -324,7 +354,7 @@ visual(type = "box", x = exit_preds, y = df_exited$is_success, range = 0,
 
 ```
 
-```{r, checking the acquired companies but wrongly predicted}
+```{r, Checking the acquired companies but wrongly predicted}
 # Add the predictions back to the filtered 'exited' dataframe
 df_exited$predicted_class <- exit_class
 
@@ -336,29 +366,24 @@ surprising_acquisitions_data <- df_exited[df_exited$is_success == 1 & df_exited$
 # I used the company name column to identify them
 surprising_names <- df_invest_cp[rownames(surprising_acquisitions_data), c("name", "market", "funding_total_usd", "funding_rounds", "country_name", "Region")]
 
-# 4. View the first 20 names
-surprising_names20 <- head(sort(table(surprising_names$market), decreasing = TRUE), 20)
+# Saving the first 20 Markets of unpredicted successful companies
+surprising_names20 <- head(sort(table(surprising_names$market), 
+                                decreasing = TRUE), 20)
 
+# Cleaning all the names of unpredicted successful companies
 surprising_names <- na.omit(surprising_names)
 ```
 
-```{r}
+```{r, Visualizing the Top 20 markets for unpredicted successful startups}
 {
-par(mar = c(9, 4, 2, 2))
-
-text(x = barplot(surprising_names20, las = 2, col = "green", 
+  par(mar = c(10.5, 4, 2, 2))
+  visual(type = "bar", surprising_names20, las = 2, col = "green", 
                 title = "Top 20 Markets for Successful Acquisitions",
-                ylab = "Number of Companies",
-                ylim = c(0, max(surprising_names20) * 1.2), 
-                cex.names = 0.8), 
-     y = surprising_names20, 
-     labels = surprising_names20, 
-     pos = 3, 
-     cex = 0.8, 
-     col = "darkgreen")
+                ylab = "Number of Companies")
 }
 ```
 Checking the possible reasons behind unprediction
+
 ```{r, Checking the possible reasons behind unpredictability}
 sapply(list(original = df_invest_cp[df_invest_cp$status == "acquired", ], 
             unpredicte = surprising_names),
@@ -367,6 +392,7 @@ sapply(list(original = df_invest_cp[df_invest_cp$status == "acquired", ],
            Mean_Rounds = mean(df$funding_rounds, na.rm = TRUE))
        })
 ```
+The difference between means require more investigation, so let's test the significance of this difference.
 
 ```{r, Check if the difference in means is significant or not}
 # Defining the two comparison groups
@@ -379,7 +405,7 @@ cols_to_test <- c("funding_total_usd", "funding_rounds")
 # Running the t-test for each column
 t_results <- sapply(cols_to_test, function(col) {
   test <- t.test(group_original[[col]], group_surprising[[col]], na.rm = TRUE)
-  c(p_value = round(test$p.value, 20), 
+  c(p_value = test$p.value, 
   t_stat = round(test$statistic, 5),
   significant = ifelse(test$p.value < 0.05, "YES", "NO"))
   })
