@@ -253,4 +253,139 @@ par(mgp = c(4, 1, 0), mar = c(10, 6, 4, 2))
   
   }
 ```
+Now, I want to predict the success of the Startups. The success here means the startup got acquired by another company. The failure here is closed startup.
 
+```{r, Preparing data for model}
+cols_to_keep <- c("status", "funding_total_usd", "funding_rounds", 
+                  "founded_year", "seed", "venture", "angel", 
+                  "income", "Region")
+
+df_model <- df_invest_cp[, cols_to_keep]
+```
+
+```{r, 2nd phase of preparation of data for model}
+# Creation of a subset of only 'acquired' and 'closed'
+df_exited <- df_model[df_model$status %in% c("acquired", "closed"), ]
+
+# Defining the target: 
+# 1 for Success (Acquired)
+# 0 for Failure (Closed)
+df_exited$is_success <- ifelse(df_exited$status == "acquired", 1, 0)
+
+# Cleaning up any other levels in the factor
+df_exited$status <- factor(df_exited$status)
+```
+
+```{r, Building the model}
+set.seed(123)
+
+# Build the model
+exit_model <- glm(is_success ~ funding_total_usd + funding_rounds + 
+                    founded_year + seed + venture + angel + income + Region, 
+                  family = "binomial", data = df_exited)
+
+summary(exit_model)
+```
+Each additional round of funding significantly increases the chances of being acquired. This means that the continuous successful funding rounds is an indicator for successful exit (make sense).
+
+While total funding is neutral, specifically having Venture funding has a positive, significant impact.
+
+Being based in North America shows a strong positive correlation with acquisition.
+
+Founded Year coefficient is highly negative. This means, as the year goes up (newer companies), the likelihood of having been acquired goes down. This makes sense also as older companies have had more time to exit.
+
+Surprisingly, higher seed funding has a tiny but statistically significant negative impact on the probability of acquisition in this model. This could imply that companies that highly depend on seed without moving to venture are less likely to exit.
+
+```{r}
+exit_preds <- predict(exit_model, df_exited, type = "response")
+exit_class <- ifelse(exit_preds > 0.5, 1, 0)
+table(Predicted = exit_class, Actual = df_exited$is_success)
+```
+
+```{r}
+TN <- 674 
+FN <- 336
+FP <- 802
+TP <- 2184
+
+# Calculating Accuracy
+# Formula: (True Positives + True Negatives) / Total
+accuracy <- (TP + TN) / (TN + FN + FP + TP)
+paste0(round(accuracy*100,2) , "%")
+```
+
+```{r}
+# Comparison of the predicted probabilities of the two groups
+visual(type = "box", x = exit_preds, y = df_exited$is_success, range = 0,
+        title = "Predicted Probability: Acquired (1) vs Closed (0)",
+        xlab = "0=Closed, 1=Acquired", 
+        ylab = "Probability of Success",
+        col = c("red", "green"))
+
+```
+
+```{r, checking the acquired companies but wrongly predicted}
+# Add the predictions back to the filtered 'exited' dataframe
+df_exited$predicted_class <- exit_class
+
+# Identify the 'False Negatives' (Actual: Acquired, Predicted: Closed)
+# These are the 891 companies
+surprising_acquisitions_data <- df_exited[df_exited$is_success == 1 & df_exited$predicted_class == 0, ]
+
+# Pulling the names from the original dataframe using the row indices
+# I used the company name column to identify them
+surprising_names <- df_invest_cp[rownames(surprising_acquisitions_data), c("name", "market", "funding_total_usd", "funding_rounds", "country_name", "Region")]
+
+# 4. View the first 20 names
+surprising_names20 <- head(sort(table(surprising_names$market), decreasing = TRUE), 20)
+
+surprising_names <- na.omit(surprising_names)
+```
+
+```{r}
+{
+par(mar = c(9, 4, 2, 2))
+
+text(x = barplot(surprising_names20, las = 2, col = "green", 
+                title = "Top 20 Markets for Successful Acquisitions",
+                ylab = "Number of Companies",
+                ylim = c(0, max(surprising_names20) * 1.2), 
+                cex.names = 0.8), 
+     y = surprising_names20, 
+     labels = surprising_names20, 
+     pos = 3, 
+     cex = 0.8, 
+     col = "darkgreen")
+}
+```
+Checking the possible reasons behind unprediction
+```{r, Checking the possible reasons behind unpredictability}
+sapply(list(original = df_invest_cp[df_invest_cp$status == "acquired", ], 
+            unpredicte = surprising_names),
+       function(df) {
+         c(Mean_Funding_100K = mean(df$funding_total_usd / 100000, na.rm = TRUE),
+           Mean_Rounds = mean(df$funding_rounds, na.rm = TRUE))
+       })
+```
+
+```{r, Check if the difference in means is significant or not}
+# Defining the two comparison groups
+group_original <- df_invest_cp[df_invest_cp$status == "acquired", ]
+group_surprising <- surprising_names
+
+# Defining the columns I want to test
+cols_to_test <- c("funding_total_usd", "funding_rounds")
+
+# Running the t-test for each column
+t_results <- sapply(cols_to_test, function(col) {
+  test <- t.test(group_original[[col]], group_surprising[[col]], na.rm = TRUE)
+  c(p_value = round(test$p.value, 20), 
+  t_stat = round(test$statistic, 5),
+  significant = ifelse(test$p.value < 0.05, "YES", "NO"))
+  })
+
+# Display the results
+print(t_results)
+```
+
+According to t.test result, the difference between the means of these two columns in the unpredicted dataset and the whole dataset, shows statistical significance. This explain the unpredictability of these companies as a successful companies by the model. Note, I just tested the numeric columns, the other columns like "country", "Region" and "market", could have their weight too.
