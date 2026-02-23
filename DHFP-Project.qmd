@@ -21,7 +21,8 @@ By checking the columns, it is obvious it needs cleaning. So, in the next step, 
 ```{r, Exploration}
 df_invest <- df[!is.na(df$funding_rounds) & df$funding_rounds != "", ]
 
-# Call save_csv function to save the cleaned file (I asked AI how to call the function from a folder)
+# Call save_csv function to save the cleaned file (I asked AI 
+# how to call the function from a folder)
 source("Functions/save_csv.R")
 
 # Saving the file
@@ -38,11 +39,13 @@ To know the full name of countries to improve readability of the analysis, I dow
 library("readxl")
 #?read_excel()
 
-# Reading the complementary excel file and rename its columns to improve readability
+# Reading the complementary excel file and rename its columns to 
+# improve readability
 Countries <- read_excel("Raw_complementary_dataset/3Letters_Countries.xlsx", col_names = c("country_name", "2L_code", "3L_code", "country_code"))
 
 # Merging the two tables
-df_invest <- merge(df_invest, Countries[, c("country_name", "3L_code")], by.x = "country_code", by.y = "3L_code", all.x = TRUE)
+df_invest <- merge(df_invest, Countries[, c("country_name", "3L_code")], 
+                   by.x = "country_code", by.y = "3L_code", all.x = TRUE)
 
 # Making a copy cp to add more demographics safely
 df_invest_cp <- df_invest
@@ -52,11 +55,11 @@ save_csv(df_invest, "Cleaned_dataset/df_invest_cp.csv")
 ```
 After adding the countries, I realized that there could be ready-made libraries that already do this task, so I installed and used them in the next steps to add more demographic information for the project. But I didn't remove the last merged dataset to keep implementing the concept of integrating multiple datasets.
 
-```{r}
+```{r, Adding the region and the continent}
 library(countrycode)
-?countrycode()
+#?countrycode()
 
-# I am using countrycode specifically because it contains the region, gapminder didn't have regions, but I will use it later as it has more demographic features.
+# I am using countrycode specifically because it contains the region, gapminder didn't have regions.
 df_invest_cp$Continent <- countrycode(sourcevar = df_invest_cp$country_code,
                                         origin = "iso3c",
                                         destination = "continent")
@@ -67,19 +70,20 @@ df_invest_cp$Region <- countrycode(sourcevar = df_invest_cp$country_code,
 ```
 
 I still need more demographics data for comparisons. I need regions like "Middle East", population, GDP per capita and the economics status, so I searched, and found World Development Indicators (World Bank) in WDI library.
-```{r, Downloading World}
+```{r, Mergin World Development Indicators (World Bank)}
 # install.packages("WDI")
 library(WDI)
-?WDI
+#?WDI
 
 World_Demographics <- WDI(country = "all", indicator = c(
-    "gdpPercap" = "NY.GDP.PCAP.KD", "pop" = "SP.POP.TOTL", "lifeExp" = "SP.DYN.LE00.IN"), start = 2000, end = 2026, extra = TRUE)
+    "gdpPercap" = "NY.GDP.PCAP.KD", "pop" = "SP.POP.TOTL", "lifeExp" = "SP.DYN.LE00.IN"), start = 2023, end = 2026, extra = TRUE)
 
 save_csv(World_Demographics, "Merged_data/World_Demographics.csv")
 
 # By checking the data, 2023 is the last year even it is updated in 2026
 World_Demographics23 <- World_Demographics[World_Demographics$year == 2023, ] 
-# Subsetting aggregate regions (like "Middle East") to keep only countries and NA values
+# Subsetting aggregate regions (like "Middle East") to keep only 
+# countries and NA values
 World_Demographics23_agg <- World_Demographics23[World_Demographics23$region == "Aggregates" & !is.na(World_Demographics23$region), ]
 
 save_csv(World_Demographics23_agg, "Merged_data/World_Demographics23_agg.csv")
@@ -89,17 +93,27 @@ World_Demographics23 <- World_Demographics23[World_Demographics23$region != "Agg
 
 save_csv(World_Demographics23, "Merged_data/World_Demographics23.csv")
 
-# Merging the demographic columns from WDI to the cleaned df_invest_cp with inner join to ensure that all the data now has demographics but I need to remove region column first from df_invest_cp
+# Merging the demographic columns from WDI to the cleaned df_invest_cp 
+# with inner join to ensure that all the data now has demographics but 
+# I need to remove region column first from df_invest_cp
 df_invest_cp <- df_invest_cp[,-10]
-df_invest_cp <- merge(x = df_invest_cp, y = World_Demographics23[, c("iso3c", "gdpPercap", "pop", "lifeExp", "capital", "longitude", "latitude", "income")], by.x = "country_code", by.y = "iso3c", all.x = FALSE)
+df_invest_cp <- merge(x = df_invest_cp, y = 
+                        World_Demographics23[, c("iso3c", "gdpPercap", 
+                                                 "pop", "lifeExp", 
+                                                 "capital", "longitude",
+                                                 "latitude", "income")],
+                      by.x = "country_code", by.y = "iso3c", all.x = FALSE)
 
 save_csv(df_invest_cp, "Merged_data/df_invest_fullmerged.csv")
 ```
 
-```{r, continue exploring demographics}
+```{r, 2nd phase of exploring demographics and cleaning the data}
 str(df_invest_cp)
 
-# 2nd stage of Cleaning by converting some columns wrong datatypes like funding_total_usd by removing commas and spaces, then converting to numeric (I found that R turns "-" into NA automatically, and I used this.)
+# 2nd phase of Cleaning by converting some columns wrong datatypes 
+# like funding_total_usd by removing commas and spaces, then converting
+# to numeric (I found that R turns "-" into NA automatically,
+# and I used this.)
 df_invest_cp$funding_total_usd <- gsub("[, ]", "", df_invest_cp$funding_total_usd)
 df_invest_cp$funding_total_usd <- as.numeric(df_invest_cp$funding_total_usd)
 
@@ -107,173 +121,136 @@ df_invest_cp$funding_total_usd <- as.numeric(df_invest_cp$funding_total_usd)
 df_invest_cp$longitude <- as.numeric(df_invest_cp$longitude)
 df_invest_cp$latitude  <- as.numeric(df_invest_cp$latitude)
 
-# Converting all dates using as.Date with specific formate in the month to get the month name. This formate is in the lectures P. 118. It will be useful later in visualization to show the months names.
+# Converting all dates using as.Date with specific format in the month
+# to get the month name. This format will be useful later in 
+# visualizations to show the months names.
 df_invest_cp$founded_at       <- as.Date(df_invest_cp$founded_at)
 df_invest_cp$first_funding_at <- as.Date(df_invest_cp$first_funding_at)
 df_invest_cp$last_funding_at  <- as.Date(df_invest_cp$last_funding_at)
 df_invest_cp$month_name <- format(df_invest_cp$founded_at, "%B")
 
 # Factorizing the quarter for easier visualization
-df_invest_cp$founded_quarter <- as.factor(substr(df_invest_cp$founded_quarter, 6, 7))
+df_invest_cp$founded_quarter <- as.factor(
+  substr(df_invest_cp$founded_quarter, 6, 7))
 
 save_csv(df_invest_cp, "Merged_data/df_invest_fm_c.csv")
 ```
-Now, I want to know how are startups distributed across Continents?
+Now, I want to know how are startups distribute across Continents?
 
-```{r, visualizations}
+```{r, Startups distribution accross continents visualizations}
 # A place to start from to avoid running the whole code over and over
-# df_invest_cp <- read.csv("Merged_data/df_invest_fm_c.csv")
+df_invest_cp <- read.csv("Merged_data/df_invest_fm_c.csv")
 
 source("Functions/visual.R")
 
 # Answering the startups distribution question
-visual(type = "bar", x = sort(table(df_invest_cp$Continent), decreasing = TRUE), 
-       title = "Startups by Continent", xlab = "", ylab = "Number of Companies")
+par(mgp = c(4, 1, 0), mar = c(7, 6, 4, 2))
+
+visual(type = "bar", x = sort(table(df_invest_cp$Continent), decreasing = TRUE), title = "Startups by Continent", xlab = "", ylab = "Number of Companies")
 ```
 It is obvious that Americas are the continent of the startups followed by Europe, and ended by Africa.
 
 But, is there a specific month for starting a business? is there a hidden pattern regardless the reasons?
 
 ```{r}
-# Order the months so they don't appear alphabetically
+# Order the months
+df_invest_cp$month_name <- factor(df_invest_cp$month_name, levels = month.name)
+
 visual(type = "bar", x = table(df_invest_cp$month_name), 
        title = "Foundation Frequency by Month", xlab = "Month Name", 
-       ylab = "Total Foundations")
+       ylab = "Total Foundations", las = 2)
 ```
-Results shows that January is weirdly the month of founding a startup! 
+Results shows that January is weirdly the month of founding a startup! May be some startups consider it representing the whole year.
 
-Does this mean that Q1 will be the highest quarter of founding a startup?
-```{r}
+But does this mean that Q1 will be the highest quarter of founding a startup?
+```{r, Visualizing the number of startups founded by Quarter}
+# To ensure that missing values has a value in the chart
+df_invest_cp$founded_quarter[df_invest_cp$founded_quarter == "" | is.na(df_invest_cp$founded_quarter)] <- "Missing"
+
 visual(type = "bar", x = table(df_invest_cp$founded_quarter),
   title = "Number of Startups Founded by Quarter", xlab = "Quarter",
   ylab = "Count of Startups")
 ```
 Yes, as expected, Q1 is the highest, but this graph shows an opportunity to fill the missing 8701 points as we have the month name then I will check it again.
 
-```{r}
-Q1 <- c("January", "February", "March")
-Q2 <- c("April", "May", "June")
-Q3 <- c("July", "August", "September")
-Q4 <- c("October", "November", "December")
+```{r, Filling the missings in the founded_quarter}
+# Filling missings in founded_quarter column with values
+quarters <- setNames(rep(paste0("Q", 1:4), each=3), month.name)
+df_invest_cp$founded_quarter <- quarters[df_invest_cp$month_name]
 
-# I tried nested ifelse and it worked, may be not the best way, but it is readable.
-df_invest_cp$founded_quarter <- ifelse(df_invest_cp$month_name %in% Q1, "Q1", ifelse(df_invest_cp$month_name %in% Q2, "Q2", ifelse(df_invest_cp$month_name %in% Q3, "Q3", ifelse(df_invest_cp$month_name %in% Q4, "Q4", NA))))
+# I tried nested ifelse and it worked, may be not the best way, but it is readable.  
+# Q1 <- c("January", "February", "March")
+# Q2 <- c("April", "May", "June")
+# Q3 <- c("July", "August", "September")
+# Q4 <- c("October", "November", "December")
+
+# ifelse(df_invest_cp$month_name %in% Q1, "Q1", ifelse(df_invest_cp$month_name %in% Q2, "Q2", ifelse(df_invest_cp$month_name %in% Q3, "Q3", ifelse(df_invest_cp$month_name %in% Q4, "Q4", NA))))
 
 # After material revision of SWITCH rules I found it non vectorized, and only work with sapply, I tried writing it again:
-df_invest_cp$founded_quarter <- sapply(df_invest_cp$month_name, function(x)
-  {switch(x,"January" = "Q1", "February" = "Q1", "March" = "Q1",
-          "April" = "Q2", "May" = "Q2", "June" = "Q2",
-          "July" = "Q3", "August" = "Q3", "September" = "Q3",
-          "October" = "Q4", "November" = "Q4", "December" = "Q4", NA)})
-```
-
-```{r}
-
+# df_invest_cp$founded_quarter <- sapply(df_invest_cp$month_name, function(x)
+#  {switch(x,"January" = "Q1", "February" = "Q1", "March" = "Q1",
+#          "April" = "Q2", "May" = "Q2", "June" = "Q2",
+#          "July" = "Q3", "August" = "Q3", "September" = "Q3",
+#          "October" = "Q4", "November" = "Q4", "December" = "Q4", NA)})
 ```
 
 After rerunning the plotting function again, it shows clearly that all the missing quarters are filled now and Q1 is still the main quarter.
 
 Let's check the most common status of companies in this dataset?
 
-```{r}
-visual(type = "bar", x = table(df_invest_cp$status),
-       title = "Current Company Status", xlab = "Status", ylab = "Count")
+```{r, Visualizing the current companies status}
+
+df_invest_cp$status[df_invest_cp$status == "" | is.na(df_invest_cp$status)] <- "Missing"
+
+visual(type = "bar", x = sort(table(df_invest_cp$status), decreasing = TRUE),
+       title = "Current Companies Status", xlab = "Status", ylab = "Count")
 ```
-Most of the startups are "operating" but there are more than 1108 companies without a status also. I thought removing them will unnecesserilly decrease the dataset as these startups could represent some marginalized regions.
+Most of the startups are "operating" but there are more than 1108 companies without a status also. I thought removing them will unnecesserily decrease the dataset as these startups could represent some marginalized regions.
 
 So, let's find if the number of funding rounds increase with a country's GDP or not to understand the economic impact!
 
-```{r}
+```{r, Visualizing Country Wealth vs. Investment Rounds}
 visual(type = "scatter", x = df_invest_cp$gdpPercap, 
        y = df_invest_cp$funding_rounds, 
        title = "Country Wealth vs. Investment Rounds", 
-       xlab = "GDP per Capita", ylab = "Number of Funding Rounds", col = "red")
+       xlab = "GDP per Capita", ylab = "Number of Funding Rounds",
+       pch = 16, col = adjustcolor("red", alpha.f = 0.1))
 ```
 
-Yes, it is affecting the low GDP countries, but also affects the high GDP countries. I think that high GDP countries citizens aren't very interested in making startups or may be the higher level of regulations hinder them. The explanation needs more investigation from my opinion.
+Yes, it is affecting the low GDP countries, but also affects the high GDP countries. I think that high GDP countries citizens aren't very interested in filling the requirements of the usual funding rounds of startups or may be the higher level of regulations hinder them, or may be got acquired after less number of rounds. The explanation needs more investigation from my opinion to find the confounding factor.
 
 Let's find how many funding rounds do companies usually go through?
-```{r}
-visual(type = "bar", x =round((table(df_invest_cp$funding_rounds) / sum(table(df_invest_cp$funding_rounds))) * 100,1),
-  title = "Distribution of Funding Rounds", xlab = "Number of Rounds",
+```{r, Visualizing Percentage of companies per funding rounds}
+# This visualization needs the calculation of the cumulative sum
+counts <- table(df_invest_cp$funding_rounds)
+total_startups <- sum(counts)
+
+# Calculate how many "dropped out" at each stage
+dropped_out <- cumsum(counts)
+
+# Subtracting the total startups number from each round acc. sum
+# then I added the original counts (frequencies per funding round)
+cum_rounds <- (total_startups - dropped_out) + counts
+
+visual(type = "bar", x = round((cum_rounds / sum(!is.na(df_invest_cp$funding_rounds))) * 100, 1),
+  title = "Percentage of companies per Funding Rounds", xlab = "Number of Rounds",
   ylab  = "Percentage of Companies (%)",
   col = "yellow")
 ```
-It is clear that less than the third of the startups that got their first round, will go through a second one, but this gap narrowed after that from the third to almost the half.
+It is clear that almost the third of the startups that got their first round, will go through a second one, but this gap narrowed after that from the third to almost the half. So, we can call the second round a statistical bottleneck for more rounds.
 
-```{r}
-# Create an empty plot frame
-tab <- table(df_invest_cp$funding_rounds, df_invest_cp$income)
+```{r, Visualizing the mean of different income groups}
+# Calculate mean funding by income group
+mean_funding <- round(tapply(df_invest_cp$funding_total_usd, df_invest_cp$income, mean, na.rm = TRUE)/100000, 0)
 
-matplot(tab, type = "b", pch = 19, xlab = "Funding Rounds", 
-        ylab = "Number of Startups", main = "Trend of Funding Rounds by Continent",
-        xaxt = "n")
 
-axis(1, at = 1:nrow(tab), labels = rownames(tab))
-
-# Add a legend so you know which line is which continent
-legend("topright", legend = colnames(tab), col = 1:ncol(tab), lty = 1, pch = 19)
+# Plotting the means, a par added here to fit this specific graph
+{
+par(mgp = c(4, 1, 0), mar = c(10, 6, 4, 2))
+  visual(type = "bar", 
+         x = mean_funding, ylab = "Mean funding by 100K",
+         title = "Mean Funding by Income Group", las = 2)
+  
+  }
 ```
 
-```{r}
-class(df_invest_cp$funding_total_usd)
-class(df_invest_cp$founded_at)
-# 1. You MUST include Continent in the list to make 'tab' a 2D matrix
-tab <- tapply(df_invest_cp$funding_total_usd, 
-              list(format(as.Date(df_invest_cp$founded_at), "%Y"), 
-                   df_invest_cp$Continent), 
-              mean, na.rm = TRUE)
-
-# 2. Setup margins (8 on the right provides room for the legend)
-par(mar = c(5, 5, 4, 8), xpd = TRUE)
-
-# 3. Plot using matplot
-# We check if tab is a matrix; if it's 1D, ncol won't work.
-matplot(tab / 1000000, 
-        type = "b", 
-        pch = 19, 
-        lty = 1, 
-        las = 1,
-        col = 1:ncol(tab),
-        xlab = "Year Founded", 
-        ylab = "Avg Funding (Millions USD)", 
-        main = "Yearly Funding Trend by Continent",
-        xaxt = "n")
-
-# 4. Fix the X-axis labels (Rows are Years)
-axis(1, at = 1:nrow(tab), labels = rownames(tab), cex.axis = 0.7, las = 2)
-
-# 5. Fix the Legend (Columns are Continents)
-legend("topright", 
-       inset = c(-0.3, 0), # Moves legend into the margin
-       legend = colnames(tab), 
-       col = 1:ncol(tab), 
-       lty = 1, 
-       pch = 19, 
-       title = "Continent",
-       cex = 0.7)
-```
-
-```{r}
-# 1. Create the vector (1D)
-tab <- tapply(df_invest_cp$funding_total_usd, 
-              format(as.Date(df_invest_cp$founded_at), "%Y"), 
-              mean, na.rm = TRUE)
-
-# 2. Reset margins (no need for the big right margin without a legend)
-par(mar = c(6, 5, 4, 2)) 
-
-# 3. Use plot() instead of matplot() for a single vector
-plot(tab / 1000000, 
-     type = "b", 
-     pch = 19, 
-     col = "blue", 
-     las = 1, 
-     xaxt = "n", 
-     xlab = "Year Founded", 
-     ylab = "Avg Funding (Millions USD)", 
-     main = "Yearly Average Funding Trend")
-
-# 4. Use length(tab) instead of nrow(tab) for 1D vectors
-axis(1, at = 1:length(tab), labels = names(tab), cex.axis = 0.7, las = 2)
-```
