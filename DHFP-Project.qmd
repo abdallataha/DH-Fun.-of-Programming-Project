@@ -122,15 +122,15 @@ Now, I want to know how are startups distributed across Continents?
 
 ```{r, visualizations}
 # A place to start from to avoid running the whole code over and over
-df_invest_cp <- read.csv("Merged_data/df_invest_fm_c.csv")
+# df_invest_cp <- read.csv("Merged_data/df_invest_fm_c.csv")
 
 source("Functions/visual.R")
 
 # Answering the startups distribution question
-visual(type = "bar", x = table(df_invest_cp$Continent), 
+visual(type = "bar", x = sort(table(df_invest_cp$Continent), decreasing = TRUE), 
        title = "Startups by Continent", xlab = "", ylab = "Number of Companies")
 ```
-It is obvious that Americas are the continent of the startups followed by Europe.
+It is obvious that Americas are the continent of the startups followed by Europe, and ended by Africa.
 
 But, is there a specific month for starting a business? is there a hidden pattern regardless the reasons?
 
@@ -151,11 +151,24 @@ visual(type = "bar", x = table(df_invest_cp$founded_quarter),
 Yes, as expected, Q1 is the highest, but this graph shows an opportunity to fill the missing 8701 points as we have the month name then I will check it again.
 
 ```{r}
+Q1 <- c("January", "February", "March")
+Q2 <- c("April", "May", "June")
+Q3 <- c("July", "August", "September")
+Q4 <- c("October", "November", "December")
+
 # I tried nested ifelse and it worked, may be not the best way, but it is readable.
-df_invest_cp$founded_quarter <- ifelse(df_invest_cp$month_name %in% c("January", "February", "March"), "Q1", 
-                                       ifelse(df_invest_cp$month_name %in% c("April", "May", "June"), "Q2", 
-                                              ifelse(df_invest_cp$month_name %in% c("July", "August", "September"), "Q3", 
-                                                     ifelse(df_invest_cp$month_name %in% c("October", "November", "December"), "Q4", NA))))
+df_invest_cp$founded_quarter <- ifelse(df_invest_cp$month_name %in% Q1, "Q1", ifelse(df_invest_cp$month_name %in% Q2, "Q2", ifelse(df_invest_cp$month_name %in% Q3, "Q3", ifelse(df_invest_cp$month_name %in% Q4, "Q4", NA))))
+
+# After material revision of SWITCH rules I found it non vectorized, and only work with sapply, I tried writing it again:
+df_invest_cp$founded_quarter <- sapply(df_invest_cp$month_name, function(x)
+  {switch(x,"January" = "Q1", "February" = "Q1", "March" = "Q1",
+          "April" = "Q2", "May" = "Q2", "June" = "Q2",
+          "July" = "Q3", "August" = "Q3", "September" = "Q3",
+          "October" = "Q4", "November" = "Q4", "December" = "Q4", NA)})
+```
+
+```{r}
+
 ```
 
 After rerunning the plotting function again, it shows clearly that all the missing quarters are filled now and Q1 is still the main quarter.
@@ -187,3 +200,80 @@ visual(type = "bar", x =round((table(df_invest_cp$funding_rounds) / sum(table(df
   col = "yellow")
 ```
 It is clear that less than the third of the startups that got their first round, will go through a second one, but this gap narrowed after that from the third to almost the half.
+
+```{r}
+# Create an empty plot frame
+tab <- table(df_invest_cp$funding_rounds, df_invest_cp$income)
+
+matplot(tab, type = "b", pch = 19, xlab = "Funding Rounds", 
+        ylab = "Number of Startups", main = "Trend of Funding Rounds by Continent",
+        xaxt = "n")
+
+axis(1, at = 1:nrow(tab), labels = rownames(tab))
+
+# Add a legend so you know which line is which continent
+legend("topright", legend = colnames(tab), col = 1:ncol(tab), lty = 1, pch = 19)
+```
+
+```{r}
+class(df_invest_cp$funding_total_usd)
+class(df_invest_cp$founded_at)
+# 1. You MUST include Continent in the list to make 'tab' a 2D matrix
+tab <- tapply(df_invest_cp$funding_total_usd, 
+              list(format(as.Date(df_invest_cp$founded_at), "%Y"), 
+                   df_invest_cp$Continent), 
+              mean, na.rm = TRUE)
+
+# 2. Setup margins (8 on the right provides room for the legend)
+par(mar = c(5, 5, 4, 8), xpd = TRUE)
+
+# 3. Plot using matplot
+# We check if tab is a matrix; if it's 1D, ncol won't work.
+matplot(tab / 1000000, 
+        type = "b", 
+        pch = 19, 
+        lty = 1, 
+        las = 1,
+        col = 1:ncol(tab),
+        xlab = "Year Founded", 
+        ylab = "Avg Funding (Millions USD)", 
+        main = "Yearly Funding Trend by Continent",
+        xaxt = "n")
+
+# 4. Fix the X-axis labels (Rows are Years)
+axis(1, at = 1:nrow(tab), labels = rownames(tab), cex.axis = 0.7, las = 2)
+
+# 5. Fix the Legend (Columns are Continents)
+legend("topright", 
+       inset = c(-0.3, 0), # Moves legend into the margin
+       legend = colnames(tab), 
+       col = 1:ncol(tab), 
+       lty = 1, 
+       pch = 19, 
+       title = "Continent",
+       cex = 0.7)
+```
+
+```{r}
+# 1. Create the vector (1D)
+tab <- tapply(df_invest_cp$funding_total_usd, 
+              format(as.Date(df_invest_cp$founded_at), "%Y"), 
+              mean, na.rm = TRUE)
+
+# 2. Reset margins (no need for the big right margin without a legend)
+par(mar = c(6, 5, 4, 2)) 
+
+# 3. Use plot() instead of matplot() for a single vector
+plot(tab / 1000000, 
+     type = "b", 
+     pch = 19, 
+     col = "blue", 
+     las = 1, 
+     xaxt = "n", 
+     xlab = "Year Founded", 
+     ylab = "Avg Funding (Millions USD)", 
+     main = "Yearly Average Funding Trend")
+
+# 4. Use length(tab) instead of nrow(tab) for 1D vectors
+axis(1, at = 1:length(tab), labels = names(tab), cex.axis = 0.7, las = 2)
+```
