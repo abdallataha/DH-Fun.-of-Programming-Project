@@ -308,7 +308,33 @@ final_result <- final_result[order(final_result$fund_access, decreasing = TRUE),
   par(mfrow = c(1, 1))
 }
 ```
+
 These two graphs ensures that the accessibility to fund in High income countries is higher than the low income countries according to population. It is duplicated in "High income" countries than "Low income" countries. Although, the "Lower Middle Income" & "Upper Middle Income" countries have much higher populations, but their access to fund regarding their population is still uneven. This shows the unfair access to fund in the world.
+
+As a digital health master's student, I want to check if the healthcare services are among the top markets acquired or not.
+
+```{r, checking the healthcare services among the top markets acquired}
+# Calculating the acquisition rate considering the mean of the logical vector
+# Where TRUE (for acquired) becomes 1 and FALSE becomes 0
+# So the mean is the percentage
+market_rates <- tapply(df_invest_cp$status == "acquired", 
+                         df_invest_cp$market, 
+                         mean, na.rm = TRUE)
+  
+# Filtering for markets with at least 10 companies to ensure meaningful 
+# interpretation then sorting
+top_markets <- sort(market_rates[(table(df_invest_cp$market)) >= 10], decreasing = TRUE)
+  
+# Visualising the top 10 markets
+{
+  par(mar = c(10.5, 4, 2, 2))
+  visual(type = "bar", head(round(top_markets * 100, 0), 10), 
+         las = 2, col = "green", 
+         title = "Top 20 Markets for Successful Acquisitions",
+         ylab = "Percentage of Mean Companies")
+}
+```
+This shows that Healthcare Services ranked the sixth in the top 
 
 Now, I try to predict the success of Startups. The success here means the startup got acquired by another company. The failure here is "closed" startup. (I used AI to help me with this prediction part, under my supervision.)
 
