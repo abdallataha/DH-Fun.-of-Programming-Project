@@ -5,47 +5,52 @@ Date: "15/02/2026"
 format: html
 ---
 
-Project Goal: A try to find the factors that help company to be operating / closed / acquired stage.
+Project Goal: A try to understand some patterns that help company to be closed / acquired.
 
 The Dataset: Information about startup companies and investment via Crunchbase. The investments series at a company level are given. The company status are given. The main dataset is 54294 rows * 39 columns. The demographics will be merged from different databases to find unexpected patterns.
 
 ```{r, Reading data}
 investments_VC <- read.csv("raw_data_large/investments_VC.csv")
 
-df = data.frame(investments_VC)
+df_invest = data.frame(investments_VC)
 
-summary(df)
-```
-By checking the columns, it is obvious it needs cleaning. So, in the next step, I am going to clean the dataset from 4856 NA and empty rows depending on funding rounds column, then I will continue exploration.
+summary(df_invest)
 
-```{r, Exploration}
-df_invest <- df[!is.na(df$funding_rounds) & df$funding_rounds != "", ]
-
-# Calling the save_csv function to save the cleaned file (I asked AI 
-# how to call the function from a folder) 
-# but later, I find it in lectures
+# Calling the save_csv function to save the cleaned file 
+# (I asked AI how to call the function from a folder) 
+# but later, I found it in lectures
 source("Functions/save_csv.R")
 
 # Saving the file
 save_csv(df_invest, "raw_data_large/df_invest.csv")
+```
+By checking the columns summary, it is obviously needs cleaning. So, in the next step, I am going to clean the dataset from 4856 NA and empty rows depending on "funding rounds" column as one of the main columns this analysis will be built on, then I will continue exploration for further cleaning.
 
+```{r, 1st phase of cleaning followed by Exploration}
+df_invest <- df_invest[!is.na(df_invest$funding_rounds) 
+                       & df_invest$funding_rounds != "", ]
+
+# Saving the file using my customized function save_csv in Functions folder
+save_csv(df_invest, "Cleaned_dataset/df_invest.csv")
+
+# Continue the exploration
 table(df_invest$status)
 
 table(df_invest$funding_rounds)
+
 ```
 
 To know the full name of countries to improve readability of the analysis, I downloaded another table but in xlsx, so I tried to read with read.table or read.csv but it didn't work, so I am using readxl library I found according to external google search, it is mentioned also in P. 204 in R material after checking its documentation.
 
-```{r, integration of countries names}
+```{r, Integration of countries names}
 if(!requireNamespace("readxl", quietly=TRUE)) install.packages("readxl")
 #?read_excel()
 
 # ROU is the current official ISO 3166-1 alpha-3 country code for Romania. 
-# It replaced the former code, ROM, in February 2002 to avoid confusion with
-# the Roma people. ROU is also used by the International Olympic Committee
-# (IOC). ROM is now considered a transitionally reserved, deprecated code. 
+# It replaced the former code, ROM. 
+# ROU is also used by the International Olympic Committee (IOC).
 # So, the first step, replacing "ROM" code with "ROU"
-# Also, add NA instead of empty cells to avoid unambiguous unmatches
+# Also, I am adding NA instead of "" cells to avoid unambiguous mismatches
 df_invest$country_code[df_invest$country_code == "ROM"] <- "ROU"
 df_invest$country_code[df_invest$country_code == ""] <- NA
 
@@ -53,17 +58,17 @@ df_invest$country_code[df_invest$country_code == ""] <- NA
 # improve readability
 Countries <- readxl::read_excel("Raw_complementary_dataset/3Letters_Countries.xlsx", col_names = c("country_name", "2L_code", "3L_code", "country_code"))
 
-# Merging the two tables
+# Merging the two tables (excel file + my cleaned file)
 df_invest <- merge(df_invest, Countries[, c("country_name", "3L_code")], 
                    by.x = "country_code", by.y = "3L_code", all.x = TRUE)
 
-# Making a copy cp to add more demographics safely
-df_invest_cp <- df_invest
-
 # Saving the resulted merged dataset as df_invest_cp
 save_csv(df_invest, "Cleaned_dataset/df_invest_cp.csv")
+
+# Making a copy (cp) to add more demographics safely
+df_invest_cp <- df_invest
 ```
-After adding the countries, I realized that there could be ready-made libraries that already do this task, so I installed and used them in the next steps to add more demographic information for the project. But I didn't remove the last merged dataset to keep implementing the concept of integrating multiple datasets.
+After adding the countries names, I realized that there could be ready-made libraries that already useful to do this task, so I installed and used one of them in the next step to add more demographic information for the project. But I didn't remove the last merged dataset to keep implementing the concept of integrating multiple datasets.
 
 ```{r, Adding the region and the continent}
 if(!requireNamespace("countrycode", quietly=TRUE)) install.packages("countrycode")
@@ -75,7 +80,7 @@ df_invest_cp$Continent <- countrycode::countrycode(sourcevar = df_invest_cp$coun
 df_invest_cp$Region <- countrycode::countrycode(sourcevar = df_invest_cp$country_code, origin = "iso3c", destination = "region")
 ```
 
-I still need more demographics data for comparisons. I need regions like "Middle East", population, GDP per capita and the economics status, so I searched, and found World Development Indicators (World Bank) in WDI library.
+I still need more demographics data for possible comparisons. I need population, GDP per capita and the economics status category, so I searched, and found World Development Indicators (World Bank) in WDI library.
 ```{r, Mergin World Development Indicators (World Bank)}
 if(!requireNamespace("WDI", quietly=TRUE)) install.packages("WDI")
 #?WDI
@@ -83,7 +88,7 @@ if(!requireNamespace("WDI", quietly=TRUE)) install.packages("WDI")
 World_Demographics <- WDI::WDI(country = "all", indicator = c(
     "gdpPercap" = "NY.GDP.PCAP.KD", "pop" = "SP.POP.TOTL", "lifeExp" = "SP.DYN.LE00.IN"), start = 2023, end = 2026, extra = TRUE)
 
-save_csv(World_Demographics, "Merged_data/World_Demographics.csv")
+save_csv(World_Demographics, "Raw_complementary_dataset/World_Demographics.csv")
 
 # By checking the data, 2023 is the last year even it is updated in 2026
 World_Demographics23 <- World_Demographics[World_Demographics$year == 2023, ] 
@@ -91,12 +96,15 @@ World_Demographics23 <- World_Demographics[World_Demographics$year == 2023, ]
 # Remove aggregate regions and NA values
 World_Demographics23 <- World_Demographics23[World_Demographics23$region != "Aggregates" & !is.na(World_Demographics23$region), ]
 
-save_csv(World_Demographics23, "Merged_data/World_Demographics23.csv")
+save_csv(World_Demographics23, "Cleaned_dataset/World_Demographics23.csv")
 
 # Merging the demographic columns from WDI to the cleaned df_invest_cp 
-# with inner join to ensure that all the data now has demographics but 
-# I need to remove region column first from df_invest_cp
+# with inner join to ensure that all the cleaned data now has demographics 
+# but I want to remove region column first from df_invest_cp 
 df_invest_cp <- df_invest_cp[,-10]
+
+# all.x = FALSE is the default, but I let it to confirm inner join
+# as it will decrease the rows of df_invest_cp intentionally to 44122
 df_invest_cp <- merge(x = df_invest_cp, y = 
                         World_Demographics23[, c("iso3c", "gdpPercap", 
                                                  "pop", "lifeExp", 
@@ -112,8 +120,8 @@ str(df_invest_cp)
 
 # 2nd phase of Cleaning by converting some columns wrong datatypes 
 # like funding_total_usd by removing commas and spaces, then converting
-# to numeric (I found that R turns "-" into NA automatically,
-# and I used this.)
+# to numeric (I realized that R turns "-" into NA automatically,
+# and I used it)
 df_invest_cp$funding_total_usd <- gsub("[, ]", "", df_invest_cp$funding_total_usd)
 df_invest_cp$funding_total_usd <- as.numeric(df_invest_cp$funding_total_usd)
 
@@ -130,21 +138,22 @@ df_invest_cp$last_funding_at  <- as.Date(df_invest_cp$last_funding_at)
 df_invest_cp$month_name <- format(df_invest_cp$founded_at, "%B")
 
 # Factorizing the quarter for easier visualization
-df_invest_cp$founded_quarter <- as.factor(
-  substr(df_invest_cp$founded_quarter, 6, 7))
+df_invest_cp$founded_quarter <- 
+  as.factor(substr(df_invest_cp$founded_quarter, 6, 7))
 
 save_csv(df_invest_cp, "Merged_data/df_invest_fm_c.csv")
 ```
 Now, I want to know how are startups distribute across Continents?
 
 ```{r, Startups distribution accross continents visualizations}
-# A place to start from to avoid running the whole code over and over
+# A place to start from, to avoid running the whole code every time
 df_invest_cp <- read.csv("Merged_data/df_invest_fm_c.csv")
 
+# Calling the visual function customized for plotting and writing text 
 source("Functions/visual.R")
 
-# Answering the startups distribution question
-par1 = par(mgp = c(4, 1, 0), mar = c(3, 6, 4, 2))
+# Answering the startups distribution across continents question
+par(mgp = c(4, 1, 0), mar = c(3, 6, 4, 2))
 
 visual(type = "bar", x = sort(table(df_invest_cp$Continent), decreasing = TRUE), title = "Startups by Continent", ylab = "Number of Startups")
 ```
@@ -153,11 +162,12 @@ It is obvious that Americas are the continent of the startups followed by Europe
 But, is there a specific month for starting a business? is there a hidden pattern regardless the reasons?
 
 ```{r, Visualizing the distribution of Startups foundation by Month}
-# Ordering the months first
-df_invest_cp$month_name <- factor(df_invest_cp$month_name, levels = month.name)
+# Ordering the months first and I used the month.name function here :)
+df_invest_cp$month_name <- factor(df_invest_cp$month_name,
+                                  levels = month.name)
 
 {
-  par2 = par(mgp = c(4, 1, 0), mar = c(7, 6, 4, 2))
+  par(mgp = c(4, 1, 0), mar = c(7, 6, 4, 2))
   visual(type = "bar", x = table(df_invest_cp$month_name), 
        title = "Number of Founded Startups", xlab = "Month Name", 
        ylab = "Total Foundations", las = 2)
@@ -170,6 +180,7 @@ But does this mean that Q1 will be the highest quarter of founding a startup?
 # To ensure that missing values has a value in the chart
 df_invest_cp$founded_quarter[df_invest_cp$founded_quarter == "" | is.na(df_invest_cp$founded_quarter)] <- "Missing"
 
+
 visual(type = "bar", x = table(df_invest_cp$founded_quarter),
   title = "Number of Startups Founded by Quarter", xlab = "Quarter",
   ylab = "Count of Startups")
@@ -177,7 +188,7 @@ visual(type = "bar", x = table(df_invest_cp$founded_quarter),
 Yes, as expected, Q1 is the highest, but this graph shows an opportunity to fill the missing 8701 points as we have the month name then I will check it again.
 
 ```{r, Filling the missings in the founded_quarter}
-# Filling missings in founded_quarter column with values
+# Filling Missings in founded_quarter column with values
 quarters <- setNames(rep(paste0("Q", 1:4), each=3), month.name)
 df_invest_cp$founded_quarter <- quarters[df_invest_cp$month_name]
 
@@ -220,13 +231,14 @@ visual(type = "scatter", x = df_invest_cp$gdpPercap,
        pch = 16, col = adjustcolor("red", alpha.f = 0.1))
 ```
 
-Yes, it is affecting the low GDP countries, but also affects the high GDP countries. I think that high GDP countries citizens aren't very interested in filling the requirements of the usual funding rounds of startups or may be the higher level of regulations hinder them, or may be got acquired after less number of rounds. The explanation needs more investigation from my opinion to find the confounding factor.
+Yes, it is affecting the low GDP countries, but also affects the high GDP countries. I think that high GDP countries citizens might not very interested in filling the requirements of the usual funding rounds of startups, or may be the higher level of regulations hinder them, or may be got acquired instantly without going to funding rounds. Anyway, there is a clear gap, and the explanation needs more investigation from my opinion to find the confounding factors.
 
 Let's find how many funding rounds do companies usually go through?
 
 ```{r, Visualizing Percentage of companies per funding rounds}
 # After thinking for some time, this visualization needs 
-# the calculation of the cumulative sum
+# the calculation of the cumulative sum as the startup that funded for 18 
+# rounds must have passed through the first, second till the 17th rounds
 counts <- table(df_invest_cp$funding_rounds)
 total_startups <- sum(counts)
 
@@ -242,22 +254,21 @@ visual(type = "bar", x = round((cum_rounds / sum(!is.na(df_invest_cp$funding_rou
   ylab  = "Percentage of Companies (%)",
   col = "yellow")
 ```
-It is clear that almost the third of the startups that got their first round, will go through a second one, but this gap narrowed after that from the third to almost the half. So, we can call the second round a statistical bottleneck for more rounds.
+Almost the third of the startups that got their first round, will go through a second one, but this gap narrowed after that from the third to the half. So, we can call the second round a statistical bottleneck for more rounds.
 
 ```{r, Visualizing the mean of different income groups}
-# Calculate mean funding by income group
-mean_funding <- round(tapply(df_invest_cp$funding_total_usd, df_invest_cp$income, mean, na.rm = TRUE)/100000, 0)
-
-
+# Calculating the mean funding by income group then added as the x
 # Plotting the means, a par added here to fit this specific graph
 {
-par(mgp = c(4, 1, 0), mar = c(10, 6, 4, 2))
+  par(mgp = c(4, 1, 0), mar = c(10, 6, 4, 2))
   visual(type = "bar", 
-         x = mean_funding, ylab = "Mean funding by 100K",
+         x = round(tapply(df_invest_cp$funding_total_usd, df_invest_cp$income,
+                          mean, na.rm = TRUE)/100000, 0),
+         ylab = "Mean funding by 100K",
          title = "Mean Funding by Income Group", las = 2)
 }
 ```
-It is misleading to get conclusion from this graph only, but knowing the population of these economic categories would reveal a lot.
+It is misleading to get conclusions from this graph or GDP graph directly, but knowing the population of these economic categories might reveal different conclusions.
 
 ```{r, Checking the contradiction behind startups funding to economy}
 # Calculate the mean funding for each category
@@ -276,19 +287,34 @@ final_result$fund_access <- round(final_result$funding_total_usd / final_result$
 final_result <- final_result[order(final_result$fund_access, decreasing = TRUE), ]
 
 {
-  par(mgp = c(4, 1, 0), mar = c(10, 6, 4, 2))
-  visual(type = "bar", x = sort(tapply(final_result$fund_access,
-                                  final_result$income, unique), 
-                                decreasing = TRUE), 
+  # Setting the layout (1 row, 2 columns)
+  par(mfrow = c(1, 2), mgp = c(4, 1, 0), mar = c(10, 6, 4, 2))
+  
+  # Plotting the Population by Income
+  visual(type = "bar", sort(round(tapply(final_result$pop,
+                                         final_result$income, sum) / 
+                                    100000000, 1), decreasing = TRUE), 
+         ylab = "Total Population in 100M", 
+         title = "Population per Income Group", las = 2)
+  
+  # Plotting the Funding Access
+  visual(type = "bar", x = sort(tapply(final_result$fund_access, 
+                           final_result$income, unique), 
+                    decreasing = TRUE), 
          ylab = "Fund accessibility for startups", 
-         title = "Startups Funding Access Per Economy", las = 2)
+         title = "Startups Funding Access", las = 2)
+  
+  # Resetting layout to 1x1 so future plots aren't affected
+  par(mfrow = c(1, 1))
 }
 ```
-This ensures that the accessibility to fund to High income countries is higher than the low income countries according regarding population. It is the douplicated in "High income" countries than "Low income" countries.
+These two graphs ensures that the accessibility to fund in High income countries is higher than the low income countries according to population. It is duplicated in "High income" countries than "Low income" countries. Although, the "Lower Middle Income" & "Upper Middle Income" countries have much higher populations, but their access to fund regarding their population is still uneven. This shows the unfair access to fund in the world.
 
-Now, I want to predict the success of the Startups. The success here means the startup got acquired by another company. The failure here is closed startup.
+Now, I try to predict the success of Startups. The success here means the startup got acquired by another company. The failure here is "closed" startup. (I used AI to help me with this prediction part, under my supervision.)
 
 ```{r, Preparing data for model}
+# The columns I decided to use in the prediction where status is y 
+# and the rest of columns are predictors
 cols_to_keep <- c("status", "funding_total_usd", "funding_rounds", 
                   "founded_year", "seed", "venture", "angel", 
                   "income", "Region")
@@ -325,9 +351,9 @@ While total funding is neutral, specifically having Venture funding has a positi
 
 Being based in North America shows a strong positive correlation with acquisition.
 
-Founded Year coefficient is highly negative. This means, as the year goes up (newer companies), the likelihood of having been acquired goes down. This makes sense also as older companies have had more time to exit.
+Founded Year coefficient is highly negative. This means, as the year goes up (newer companies), the likelihood of having been acquired goes down. This makes sense also as older companies have had more time to exit and achieve higher revenues and higher potential for investors.
 
-Surprisingly, higher seed funding has a tiny but statistically significant negative impact on the probability of acquisition in this model. This could imply that companies that highly depend on seed without moving to venture are less likely to exit.
+Surprisingly, higher seed funding has a tiny but statistically significant negative impact on the probability of acquisition in this model. This could imply that companies that highly depend on seed without moving to venture are less likely to exit. This makes sense as ventures are more involved in investors' network and have a clear benefit from selling the company.
 
 ```{r, Producing the matrix of predictions}
 exit_preds <- predict(exit_model, df_exited, type = "response")
@@ -414,4 +440,6 @@ t_results <- sapply(cols_to_test, function(col) {
 print(t_results)
 ```
 
-According to t.test result, the difference between the means of these two columns in the unpredicted dataset and the whole dataset, shows statistical significance. This explain the unpredictability of these companies as a successful companies by the model. Note, I just tested the numeric columns, the other columns like "country", "Region" and "market", could have their weight too.
+According to t.test result, the difference between the means of these two columns in the unpredicted dataset and the whole "acquired" dataset, shows statistical significance. This explain the unpredictability of these companies as a successful companies by the model.
+
+Note, I just tested the numeric columns, the other columns like "country", "Region" and "market", could have their weight too.

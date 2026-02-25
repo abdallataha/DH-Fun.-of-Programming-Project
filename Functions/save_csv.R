@@ -1,6 +1,6 @@
 save_csv <- function(dataframe, file) {
-  # Automatically find the current working directory of the project.
-  # I think this makes the code "portable" so it works on any computer
+  # Automatically find the current working directory of the project
+  # I think this makes the code works on any computer
   full_path <- file.path(getwd(), file)
   
   # File saving
