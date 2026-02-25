@@ -105,14 +105,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </header>
 
 
-<p>Project Goal: A try to find the factors that help company to be operating / closed / acquired stage.</p>
+<p>Project Goal: A try to understand some patterns that help company to be closed / acquired.</p>
 <p>The Dataset: Information about startup companies and investment via Crunchbase. The investments series at a company level are given. The company status are given. The main dataset is 54294 rows * 39 columns. The demographics will be merged from different databases to find unexpected patterns.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>investments_VC <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"raw_data_large/investments_VC.csv"</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df <span class="ot">=</span> <span class="fu">data.frame</span>(investments_VC)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a>df_invest <span class="ot">=</span> <span class="fu">data.frame</span>(investments_VC)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(df_invest)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>  permalink             name           homepage_url       category_list     
  Length:54294       Length:54294       Length:54294       Length:54294      
@@ -203,28 +203,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  Max.   :1.060e+09   Max.   :1.000e+09   Max.   :600000000  
  NA's   :4856        NA's   :4856        NA's   :4856       </code></pre>
 </div>
-</div>
-<p>By checking the columns, it is obvious it needs cleaning. So, in the next step, I am going to clean the dataset from 4856 NA and empty rows depending on funding rounds column, then I will continue exploration.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>df_invest <span class="ot">&lt;-</span> df[<span class="sc">!</span><span class="fu">is.na</span>(df<span class="sc">$</span>funding_rounds) <span class="sc">&amp;</span> df<span class="sc">$</span>funding_rounds <span class="sc">!=</span> <span class="st">""</span>, ]</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Calling the save_csv function to save the cleaned file (I asked AI </span></span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co"># how to call the function from a folder) </span></span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a><span class="co"># but later, I find it in lectures</span></span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"Functions/save_csv.R"</span>)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the file</span></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(df_invest, <span class="st">"raw_data_large/df_invest.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calling the save_csv function to save the cleaned file </span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># (I asked AI how to call the function from a folder) </span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># but later, I found it in lectures</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"Functions/save_csv.R"</span>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the file</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(df_invest, <span class="st">"raw_data_large/df_invest.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>File successfully saved to: C:/Users/Abdalla/OneDrive - Faculty of Computer and Information Sciences (Ain Shams University)/Desktop/DH-Fun.-of-Programming-Project/raw_data_large/df_invest.csv</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(df_invest<span class="sc">$</span>status)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>By checking the columns summary, it is obviously needs cleaning. So, in the next step, I am going to clean the dataset from 4856 NA and empty rows depending on “funding rounds” column as one of the main columns this analysis will be built on, then I will continue exploration for further cleaning.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>df_invest <span class="ot">&lt;-</span> df_invest[<span class="sc">!</span><span class="fu">is.na</span>(df_invest<span class="sc">$</span>funding_rounds) </span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>                       <span class="sc">&amp;</span> df_invest<span class="sc">$</span>funding_rounds <span class="sc">!=</span> <span class="st">""</span>, ]</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the file using my customized function save_csv in Functions folder</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(df_invest, <span class="st">"Cleaned_dataset/df_invest.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>File successfully saved to: C:/Users/Abdalla/OneDrive - Faculty of Computer and Information Sciences (Ain Shams University)/Desktop/DH-Fun.-of-Programming-Project/Cleaned_dataset/df_invest.csv</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Continue the exploration</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(df_invest<span class="sc">$</span>status)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
            acquired    closed operating 
      1314      3692      2603     41829 </code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(df_invest<span class="sc">$</span>funding_rounds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(df_invest<span class="sc">$</span>funding_rounds)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
     1     2     3     4     5     6     7     8     9    10    11    12    13 
@@ -235,85 +242,86 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>To know the full name of countries to improve readability of the analysis, I downloaded another table but in xlsx, so I tried to read with read.table or read.csv but it didn’t work, so I am using readxl library I found according to external google search, it is mentioned also in P. 204 in R material after checking its documentation.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"readxl"</span>, <span class="at">quietly=</span><span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">"readxl"</span>)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="co">#?read_excel()</span></span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ROU is the current official ISO 3166-1 alpha-3 country code for Romania. </span></span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a><span class="co"># It replaced the former code, ROM, in February 2002 to avoid confusion with</span></span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="co"># the Roma people. ROU is also used by the International Olympic Committee</span></span>
-<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="co"># (IOC). ROM is now considered a transitionally reserved, deprecated code. </span></span>
-<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="co"># So, the first step, replacing "ROM" code with "ROU"</span></span>
-<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Also, add NA instead of empty cells to avoid unambiguous unmatches</span></span>
-<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>df_invest<span class="sc">$</span>country_code[df_invest<span class="sc">$</span>country_code <span class="sc">==</span> <span class="st">"ROM"</span>] <span class="ot">&lt;-</span> <span class="st">"ROU"</span></span>
-<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>df_invest<span class="sc">$</span>country_code[df_invest<span class="sc">$</span>country_code <span class="sc">==</span> <span class="st">""</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
-<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading the complementary excel file and rename its columns to </span></span>
-<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a><span class="co"># improve readability</span></span>
-<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>Countries <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_excel</span>(<span class="st">"Raw_complementary_dataset/3Letters_Countries.xlsx"</span>, <span class="at">col_names =</span> <span class="fu">c</span>(<span class="st">"country_name"</span>, <span class="st">"2L_code"</span>, <span class="st">"3L_code"</span>, <span class="st">"country_code"</span>))</span>
-<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a><span class="co"># Merging the two tables</span></span>
-<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>df_invest <span class="ot">&lt;-</span> <span class="fu">merge</span>(df_invest, Countries[, <span class="fu">c</span>(<span class="st">"country_name"</span>, <span class="st">"3L_code"</span>)], </span>
-<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>                   <span class="at">by.x =</span> <span class="st">"country_code"</span>, <span class="at">by.y =</span> <span class="st">"3L_code"</span>, <span class="at">all.x =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Making a copy cp to add more demographics safely</span></span>
-<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a>df_invest_cp <span class="ot">&lt;-</span> df_invest</span>
-<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the resulted merged dataset as df_invest_cp</span></span>
-<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(df_invest, <span class="st">"Cleaned_dataset/df_invest_cp.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"readxl"</span>, <span class="at">quietly=</span><span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">"readxl"</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">#?read_excel()</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># ROU is the current official ISO 3166-1 alpha-3 country code for Romania. </span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="co"># It replaced the former code, ROM. </span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="co"># ROU is also used by the International Olympic Committee (IOC).</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="co"># So, the first step, replacing "ROM" code with "ROU"</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Also, I am adding NA instead of "" cells to avoid unambiguous mismatches</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>df_invest<span class="sc">$</span>country_code[df_invest<span class="sc">$</span>country_code <span class="sc">==</span> <span class="st">"ROM"</span>] <span class="ot">&lt;-</span> <span class="st">"ROU"</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>df_invest<span class="sc">$</span>country_code[df_invest<span class="sc">$</span>country_code <span class="sc">==</span> <span class="st">""</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Reading the complementary excel file and rename its columns to </span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a><span class="co"># improve readability</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>Countries <span class="ot">&lt;-</span> readxl<span class="sc">::</span><span class="fu">read_excel</span>(<span class="st">"Raw_complementary_dataset/3Letters_Countries.xlsx"</span>, <span class="at">col_names =</span> <span class="fu">c</span>(<span class="st">"country_name"</span>, <span class="st">"2L_code"</span>, <span class="st">"3L_code"</span>, <span class="st">"country_code"</span>))</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Merging the two tables (excel file + my cleaned file)</span></span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>df_invest <span class="ot">&lt;-</span> <span class="fu">merge</span>(df_invest, Countries[, <span class="fu">c</span>(<span class="st">"country_name"</span>, <span class="st">"3L_code"</span>)], </span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>                   <span class="at">by.x =</span> <span class="st">"country_code"</span>, <span class="at">by.y =</span> <span class="st">"3L_code"</span>, <span class="at">all.x =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the resulted merged dataset as df_invest_cp</span></span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(df_invest, <span class="st">"Cleaned_dataset/df_invest_cp.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>File successfully saved to: C:/Users/Abdalla/OneDrive - Faculty of Computer and Information Sciences (Ain Shams University)/Desktop/DH-Fun.-of-Programming-Project/Cleaned_dataset/df_invest_cp.csv</code></pre>
 </div>
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Making a copy (cp) to add more demographics safely</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>df_invest_cp <span class="ot">&lt;-</span> df_invest</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<p>After adding the countries, I realized that there could be ready-made libraries that already do this task, so I installed and used them in the next steps to add more demographic information for the project. But I didn’t remove the last merged dataset to keep implementing the concept of integrating multiple datasets.</p>
+<p>After adding the countries names, I realized that there could be ready-made libraries that already useful to do this task, so I installed and used one of them in the next step to add more demographic information for the project. But I didn’t remove the last merged dataset to keep implementing the concept of integrating multiple datasets.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"countrycode"</span>, <span class="at">quietly=</span><span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">"countrycode"</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co">#?countrycode()</span></span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># I am using countrycode specifically because it contains the region</span></span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>Continent <span class="ot">&lt;-</span> countrycode<span class="sc">::</span><span class="fu">countrycode</span>(<span class="at">sourcevar =</span> df_invest_cp<span class="sc">$</span>country_code, <span class="at">origin =</span> <span class="st">"iso3c"</span>, <span class="at">destination =</span> <span class="st">"continent"</span>)</span>
-<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>Region <span class="ot">&lt;-</span> countrycode<span class="sc">::</span><span class="fu">countrycode</span>(<span class="at">sourcevar =</span> df_invest_cp<span class="sc">$</span>country_code, <span class="at">origin =</span> <span class="st">"iso3c"</span>, <span class="at">destination =</span> <span class="st">"region"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</div>
-<p>I still need more demographics data for comparisons. I need regions like “Middle East”, population, GDP per capita and the economics status, so I searched, and found World Development Indicators (World Bank) in WDI library.</p>
-<div class="cell">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"WDI"</span>, <span class="at">quietly=</span><span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">"WDI"</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co">#?WDI</span></span>
-<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>World_Demographics <span class="ot">&lt;-</span> WDI<span class="sc">::</span><span class="fu">WDI</span>(<span class="at">country =</span> <span class="st">"all"</span>, <span class="at">indicator =</span> <span class="fu">c</span>(</span>
-<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"gdpPercap"</span> <span class="ot">=</span> <span class="st">"NY.GDP.PCAP.KD"</span>, <span class="st">"pop"</span> <span class="ot">=</span> <span class="st">"SP.POP.TOTL"</span>, <span class="st">"lifeExp"</span> <span class="ot">=</span> <span class="st">"SP.DYN.LE00.IN"</span>), <span class="at">start =</span> <span class="dv">2023</span>, <span class="at">end =</span> <span class="dv">2026</span>, <span class="at">extra =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(World_Demographics, <span class="st">"Merged_data/World_Demographics.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>File successfully saved to: C:/Users/Abdalla/OneDrive - Faculty of Computer and Information Sciences (Ain Shams University)/Desktop/DH-Fun.-of-Programming-Project/Merged_data/World_Demographics.csv</code></pre>
-</div>
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># By checking the data, 2023 is the last year even it is updated in 2026</span></span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>World_Demographics23 <span class="ot">&lt;-</span> World_Demographics[World_Demographics<span class="sc">$</span>year <span class="sc">==</span> <span class="dv">2023</span>, ] </span>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"countrycode"</span>, <span class="at">quietly=</span><span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">"countrycode"</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="co">#?countrycode()</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove aggregate regions and NA values</span></span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>World_Demographics23 <span class="ot">&lt;-</span> World_Demographics23[World_Demographics23<span class="sc">$</span>region <span class="sc">!=</span> <span class="st">"Aggregates"</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(World_Demographics23<span class="sc">$</span>region), ]</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a><span class="co"># I am using countrycode specifically because it contains the region</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>Continent <span class="ot">&lt;-</span> countrycode<span class="sc">::</span><span class="fu">countrycode</span>(<span class="at">sourcevar =</span> df_invest_cp<span class="sc">$</span>country_code, <span class="at">origin =</span> <span class="st">"iso3c"</span>, <span class="at">destination =</span> <span class="st">"continent"</span>)</span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(World_Demographics23, <span class="st">"Merged_data/World_Demographics23.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>File successfully saved to: C:/Users/Abdalla/OneDrive - Faculty of Computer and Information Sciences (Ain Shams University)/Desktop/DH-Fun.-of-Programming-Project/Merged_data/World_Demographics23.csv</code></pre>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>Region <span class="ot">&lt;-</span> countrycode<span class="sc">::</span><span class="fu">countrycode</span>(<span class="at">sourcevar =</span> df_invest_cp<span class="sc">$</span>country_code, <span class="at">origin =</span> <span class="st">"iso3c"</span>, <span class="at">destination =</span> <span class="st">"region"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merging the demographic columns from WDI to the cleaned df_invest_cp </span></span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># with inner join to ensure that all the data now has demographics but </span></span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="co"># I need to remove region column first from df_invest_cp</span></span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>df_invest_cp <span class="ot">&lt;-</span> df_invest_cp[,<span class="sc">-</span><span class="dv">10</span>]</span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>df_invest_cp <span class="ot">&lt;-</span> <span class="fu">merge</span>(<span class="at">x =</span> df_invest_cp, <span class="at">y =</span> </span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>                        World_Demographics23[, <span class="fu">c</span>(<span class="st">"iso3c"</span>, <span class="st">"gdpPercap"</span>, </span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">"pop"</span>, <span class="st">"lifeExp"</span>, </span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">"capital"</span>, <span class="st">"longitude"</span>,</span>
-<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">"latitude"</span>, <span class="st">"income"</span>)],</span>
-<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>                      <span class="at">by.x =</span> <span class="st">"country_code"</span>, <span class="at">by.y =</span> <span class="st">"iso3c"</span>, <span class="at">all.x =</span> <span class="cn">FALSE</span>)</span>
-<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(df_invest_cp, <span class="st">"Merged_data/df_invest_fullmerged.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>I still need more demographics data for possible comparisons. I need population, GDP per capita and the economics status category, so I searched, and found World Development Indicators (World Bank) in WDI library.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span>(<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"WDI"</span>, <span class="at">quietly=</span><span class="cn">TRUE</span>)) <span class="fu">install.packages</span>(<span class="st">"WDI"</span>)</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="co">#?WDI</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>World_Demographics <span class="ot">&lt;-</span> WDI<span class="sc">::</span><span class="fu">WDI</span>(<span class="at">country =</span> <span class="st">"all"</span>, <span class="at">indicator =</span> <span class="fu">c</span>(</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"gdpPercap"</span> <span class="ot">=</span> <span class="st">"NY.GDP.PCAP.KD"</span>, <span class="st">"pop"</span> <span class="ot">=</span> <span class="st">"SP.POP.TOTL"</span>, <span class="st">"lifeExp"</span> <span class="ot">=</span> <span class="st">"SP.DYN.LE00.IN"</span>), <span class="at">start =</span> <span class="dv">2023</span>, <span class="at">end =</span> <span class="dv">2026</span>, <span class="at">extra =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(World_Demographics, <span class="st">"Raw_complementary_dataset/World_Demographics.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>File successfully saved to: C:/Users/Abdalla/OneDrive - Faculty of Computer and Information Sciences (Ain Shams University)/Desktop/DH-Fun.-of-Programming-Project/Raw_complementary_dataset/World_Demographics.csv</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># By checking the data, 2023 is the last year even it is updated in 2026</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>World_Demographics23 <span class="ot">&lt;-</span> World_Demographics[World_Demographics<span class="sc">$</span>year <span class="sc">==</span> <span class="dv">2023</span>, ] </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove aggregate regions and NA values</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>World_Demographics23 <span class="ot">&lt;-</span> World_Demographics23[World_Demographics23<span class="sc">$</span>region <span class="sc">!=</span> <span class="st">"Aggregates"</span> <span class="sc">&amp;</span> <span class="sc">!</span><span class="fu">is.na</span>(World_Demographics23<span class="sc">$</span>region), ]</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(World_Demographics23, <span class="st">"Cleaned_dataset/World_Demographics23.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>File successfully saved to: C:/Users/Abdalla/OneDrive - Faculty of Computer and Information Sciences (Ain Shams University)/Desktop/DH-Fun.-of-Programming-Project/Cleaned_dataset/World_Demographics23.csv</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Merging the demographic columns from WDI to the cleaned df_invest_cp </span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="co"># with inner join to ensure that all the cleaned data now has demographics </span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="co"># but I want to remove region column first from df_invest_cp </span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>df_invest_cp <span class="ot">&lt;-</span> df_invest_cp[,<span class="sc">-</span><span class="dv">10</span>]</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="co"># all.x = FALSE is the default, but I let it to confirm inner join</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="co"># as it will decrease the rows of df_invest_cp intentionally to 44122</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>df_invest_cp <span class="ot">&lt;-</span> <span class="fu">merge</span>(<span class="at">x =</span> df_invest_cp, <span class="at">y =</span> </span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>                        World_Demographics23[, <span class="fu">c</span>(<span class="st">"iso3c"</span>, <span class="st">"gdpPercap"</span>, </span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">"pop"</span>, <span class="st">"lifeExp"</span>, </span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">"capital"</span>, <span class="st">"longitude"</span>,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>                                                 <span class="st">"latitude"</span>, <span class="st">"income"</span>)],</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>                      <span class="at">by.x =</span> <span class="st">"country_code"</span>, <span class="at">by.y =</span> <span class="st">"iso3c"</span>, <span class="at">all.x =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(df_invest_cp, <span class="st">"Merged_data/df_invest_fullmerged.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>File successfully saved to: C:/Users/Abdalla/OneDrive - Faculty of Computer and Information Sciences (Ain Shams University)/Desktop/DH-Fun.-of-Programming-Project/Merged_data/df_invest_fullmerged.csv</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_invest_cp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="fu">str</span>(df_invest_cp)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>'data.frame':   44122 obs. of  48 variables:
  $ country_code        : chr  "ALB" "ARE" "ARE" "ARE" ...
@@ -365,47 +373,48 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
  $ latitude            : chr  "41.3317" "24.4764" "24.4764" "24.4764" ...
  $ income              : chr  "Upper middle income" "High income" "High income" "High income" ...</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2nd phase of Cleaning by converting some columns wrong datatypes </span></span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="co"># like funding_total_usd by removing commas and spaces, then converting</span></span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a><span class="co"># to numeric (I found that R turns "-" into NA automatically,</span></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="co"># and I used this.)</span></span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>funding_total_usd <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"[, ]"</span>, <span class="st">""</span>, df_invest_cp<span class="sc">$</span>funding_total_usd)</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>funding_total_usd <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(df_invest_cp<span class="sc">$</span>funding_total_usd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 2nd phase of Cleaning by converting some columns wrong datatypes </span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># like funding_total_usd by removing commas and spaces, then converting</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co"># to numeric (I realized that R turns "-" into NA automatically,</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="co"># and I used it)</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>funding_total_usd <span class="ot">&lt;-</span> <span class="fu">gsub</span>(<span class="st">"[, ]"</span>, <span class="st">""</span>, df_invest_cp<span class="sc">$</span>funding_total_usd)</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>funding_total_usd <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(df_invest_cp<span class="sc">$</span>funding_total_usd)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>Warning: NAs introduced by coercion</code></pre>
 </div>
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Converting coordinates to numeric</span></span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>longitude <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(df_invest_cp<span class="sc">$</span>longitude)</span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>latitude  <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(df_invest_cp<span class="sc">$</span>latitude)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Converting all dates using as.Date with specific format in the month</span></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a><span class="co"># to get the month name. This format will be useful later in </span></span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a><span class="co"># visualizations to show the months names.</span></span>
-<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>founded_at       <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(df_invest_cp<span class="sc">$</span>founded_at)</span>
-<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>first_funding_at <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(df_invest_cp<span class="sc">$</span>first_funding_at)</span>
-<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>last_funding_at  <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(df_invest_cp<span class="sc">$</span>last_funding_at)</span>
-<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>month_name <span class="ot">&lt;-</span> <span class="fu">format</span>(df_invest_cp<span class="sc">$</span>founded_at, <span class="st">"%B"</span>)</span>
-<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Factorizing the quarter for easier visualization</span></span>
-<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>founded_quarter <span class="ot">&lt;-</span> <span class="fu">as.factor</span>(</span>
-<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">substr</span>(df_invest_cp<span class="sc">$</span>founded_quarter, <span class="dv">6</span>, <span class="dv">7</span>))</span>
-<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(df_invest_cp, <span class="st">"Merged_data/df_invest_fm_c.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Converting coordinates to numeric</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>longitude <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(df_invest_cp<span class="sc">$</span>longitude)</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>latitude  <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(df_invest_cp<span class="sc">$</span>latitude)</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Converting all dates using as.Date with specific format in the month</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co"># to get the month name. This format will be useful later in </span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a><span class="co"># visualizations to show the months names.</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>founded_at       <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(df_invest_cp<span class="sc">$</span>founded_at)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>first_funding_at <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(df_invest_cp<span class="sc">$</span>first_funding_at)</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>last_funding_at  <span class="ot">&lt;-</span> <span class="fu">as.Date</span>(df_invest_cp<span class="sc">$</span>last_funding_at)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>month_name <span class="ot">&lt;-</span> <span class="fu">format</span>(df_invest_cp<span class="sc">$</span>founded_at, <span class="st">"%B"</span>)</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Factorizing the quarter for easier visualization</span></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>founded_quarter <span class="ot">&lt;-</span> </span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as.factor</span>(<span class="fu">substr</span>(df_invest_cp<span class="sc">$</span>founded_quarter, <span class="dv">6</span>, <span class="dv">7</span>))</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a><span class="fu">save_csv</span>(df_invest_cp, <span class="st">"Merged_data/df_invest_fm_c.csv"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
 <pre><code>File successfully saved to: C:/Users/Abdalla/OneDrive - Faculty of Computer and Information Sciences (Ain Shams University)/Desktop/DH-Fun.-of-Programming-Project/Merged_data/df_invest_fm_c.csv</code></pre>
 </div>
 </div>
 <p>Now, I want to know how are startups distribute across Continents?</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A place to start from to avoid running the whole code over and over</span></span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>df_invest_cp <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"Merged_data/df_invest_fm_c.csv"</span>)</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"Functions/visual.R"</span>)</span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Answering the startups distribution question</span></span>
-<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>par1 <span class="ot">=</span> <span class="fu">par</span>(<span class="at">mgp =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">2</span>))</span>
-<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">sort</span>(<span class="fu">table</span>(df_invest_cp<span class="sc">$</span>Continent), <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="at">title =</span> <span class="st">"Startups by Continent"</span>, <span class="at">ylab =</span> <span class="st">"Number of Startups"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># A place to start from, to avoid running the whole code every time</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>df_invest_cp <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">"Merged_data/df_invest_fm_c.csv"</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Calling the visual function customized for plotting and writing text </span></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"Functions/visual.R"</span>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Answering the startups distribution across continents question</span></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mgp =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">2</span>))</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">sort</span>(<span class="fu">table</span>(df_invest_cp<span class="sc">$</span>Continent), <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="at">title =</span> <span class="st">"Startups by Continent"</span>, <span class="at">ylab =</span> <span class="st">"Number of Startups"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -417,15 +426,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>It is obvious that Americas are the continent of the startups followed by Europe, and ended by Africa.</p>
 <p>But, is there a specific month for starting a business? is there a hidden pattern regardless the reasons?</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordering the months first</span></span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>month_name <span class="ot">&lt;-</span> <span class="fu">factor</span>(df_invest_cp<span class="sc">$</span>month_name, <span class="at">levels =</span> month.name)</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>  par2 <span class="ot">=</span> <span class="fu">par</span>(<span class="at">mgp =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">7</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">2</span>))</span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">table</span>(df_invest_cp<span class="sc">$</span>month_name), </span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Number of Founded Startups"</span>, <span class="at">xlab =</span> <span class="st">"Month Name"</span>, </span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"Total Foundations"</span>, <span class="at">las =</span> <span class="dv">2</span>)</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ordering the months first and I used the month.name function here :)</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>month_name <span class="ot">&lt;-</span> <span class="fu">factor</span>(df_invest_cp<span class="sc">$</span>month_name,</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">levels =</span> month.name)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">par</span>(<span class="at">mgp =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">7</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">2</span>))</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">table</span>(df_invest_cp<span class="sc">$</span>month_name), </span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Number of Founded Startups"</span>, <span class="at">xlab =</span> <span class="st">"Month Name"</span>, </span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>       <span class="at">ylab =</span> <span class="st">"Total Foundations"</span>, <span class="at">las =</span> <span class="dv">2</span>)</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -437,12 +447,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Results shows that January is weirdly the month of founding a startup! May be some startups consider it representing the whole year.</p>
 <p>But does this mean that Q1 will be the highest quarter of founding a startup?</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To ensure that missing values has a value in the chart</span></span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>founded_quarter[df_invest_cp<span class="sc">$</span>founded_quarter <span class="sc">==</span> <span class="st">""</span> <span class="sc">|</span> <span class="fu">is.na</span>(df_invest_cp<span class="sc">$</span>founded_quarter)] <span class="ot">&lt;-</span> <span class="st">"Missing"</span></span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">table</span>(df_invest_cp<span class="sc">$</span>founded_quarter),</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Number of Startups Founded by Quarter"</span>, <span class="at">xlab =</span> <span class="st">"Quarter"</span>,</span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">ylab =</span> <span class="st">"Count of Startups"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># To ensure that missing values has a value in the chart</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>founded_quarter[df_invest_cp<span class="sc">$</span>founded_quarter <span class="sc">==</span> <span class="st">""</span> <span class="sc">|</span> <span class="fu">is.na</span>(df_invest_cp<span class="sc">$</span>founded_quarter)] <span class="ot">&lt;-</span> <span class="st">"Missing"</span></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">table</span>(df_invest_cp<span class="sc">$</span>founded_quarter),</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Number of Startups Founded by Quarter"</span>, <span class="at">xlab =</span> <span class="st">"Quarter"</span>,</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">ylab =</span> <span class="st">"Count of Startups"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -453,32 +464,32 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>Yes, as expected, Q1 is the highest, but this graph shows an opportunity to fill the missing 8701 points as we have the month name then I will check it again.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filling missings in founded_quarter column with values</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>quarters <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">rep</span>(<span class="fu">paste0</span>(<span class="st">"Q"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>), <span class="at">each=</span><span class="dv">3</span>), month.name)</span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>founded_quarter <span class="ot">&lt;-</span> quarters[df_invest_cp<span class="sc">$</span>month_name]</span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a><span class="co"># I tried nested ifelse and it worked, may be not the best way, but it is readable.  </span></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Q1 &lt;- c("January", "February", "March")</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Q2 &lt;- c("April", "May", "June")</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Q3 &lt;- c("July", "August", "September")</span></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Q4 &lt;- c("October", "November", "December")</span></span>
-<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a><span class="co"># ifelse(df_invest_cp$month_name %in% Q1, "Q1", ifelse(df_invest_cp$month_name %in% Q2, "Q2", ifelse(df_invest_cp$month_name %in% Q3, "Q3", ifelse(df_invest_cp$month_name %in% Q4, "Q4", NA))))</span></span>
-<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a><span class="co"># After material revision of SWITCH rules I found it non vectorized, and only work with sapply, I tried writing it again:</span></span>
-<span id="cb27-14"><a href="#cb27-14" aria-hidden="true" tabindex="-1"></a><span class="co"># df_invest_cp$founded_quarter &lt;- sapply(df_invest_cp$month_name, function(x)</span></span>
-<span id="cb27-15"><a href="#cb27-15" aria-hidden="true" tabindex="-1"></a><span class="co">#  {switch(x,"January" = "Q1", "February" = "Q1", "March" = "Q1",</span></span>
-<span id="cb27-16"><a href="#cb27-16" aria-hidden="true" tabindex="-1"></a><span class="co">#          "April" = "Q2", "May" = "Q2", "June" = "Q2",</span></span>
-<span id="cb27-17"><a href="#cb27-17" aria-hidden="true" tabindex="-1"></a><span class="co">#          "July" = "Q3", "August" = "Q3", "September" = "Q3",</span></span>
-<span id="cb27-18"><a href="#cb27-18" aria-hidden="true" tabindex="-1"></a><span class="co">#          "October" = "Q4", "November" = "Q4", "December" = "Q4", NA)})</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Filling Missings in founded_quarter column with values</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>quarters <span class="ot">&lt;-</span> <span class="fu">setNames</span>(<span class="fu">rep</span>(<span class="fu">paste0</span>(<span class="st">"Q"</span>, <span class="dv">1</span><span class="sc">:</span><span class="dv">4</span>), <span class="at">each=</span><span class="dv">3</span>), month.name)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>founded_quarter <span class="ot">&lt;-</span> quarters[df_invest_cp<span class="sc">$</span>month_name]</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="co"># I tried nested ifelse and it worked, may be not the best way, but it is readable.  </span></span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Q1 &lt;- c("January", "February", "March")</span></span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Q2 &lt;- c("April", "May", "June")</span></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Q3 &lt;- c("July", "August", "September")</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Q4 &lt;- c("October", "November", "December")</span></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a><span class="co"># ifelse(df_invest_cp$month_name %in% Q1, "Q1", ifelse(df_invest_cp$month_name %in% Q2, "Q2", ifelse(df_invest_cp$month_name %in% Q3, "Q3", ifelse(df_invest_cp$month_name %in% Q4, "Q4", NA))))</span></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="co"># After material revision of SWITCH rules I found it non vectorized, and only work with sapply, I tried writing it again:</span></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="co"># df_invest_cp$founded_quarter &lt;- sapply(df_invest_cp$month_name, function(x)</span></span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a><span class="co">#  {switch(x,"January" = "Q1", "February" = "Q1", "March" = "Q1",</span></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="co">#          "April" = "Q2", "May" = "Q2", "June" = "Q2",</span></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a><span class="co">#          "July" = "Q3", "August" = "Q3", "September" = "Q3",</span></span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a><span class="co">#          "October" = "Q4", "November" = "Q4", "December" = "Q4", NA)})</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>After rerunning the plotting function again, it shows clearly that all the missing quarters are filled now and Q1 is still the main quarter.</p>
 <p>Let’s check the most common status of companies in this dataset?</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>status[df_invest_cp<span class="sc">$</span>status <span class="sc">==</span> <span class="st">""</span> <span class="sc">|</span> <span class="fu">is.na</span>(df_invest_cp<span class="sc">$</span>status)] <span class="ot">&lt;-</span> <span class="st">"Missing"</span></span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">sort</span>(<span class="fu">table</span>(df_invest_cp<span class="sc">$</span>status), <span class="at">decreasing =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Current Companies Status"</span>, <span class="at">xlab =</span> <span class="st">"Status"</span>, <span class="at">ylab =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>df_invest_cp<span class="sc">$</span>status[df_invest_cp<span class="sc">$</span>status <span class="sc">==</span> <span class="st">""</span> <span class="sc">|</span> <span class="fu">is.na</span>(df_invest_cp<span class="sc">$</span>status)] <span class="ot">&lt;-</span> <span class="st">"Missing"</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">sort</span>(<span class="fu">table</span>(df_invest_cp<span class="sc">$</span>status), <span class="at">decreasing =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Current Companies Status"</span>, <span class="at">xlab =</span> <span class="st">"Status"</span>, <span class="at">ylab =</span> <span class="st">"Count"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -490,11 +501,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p>Most of the startups are “operating” but there are more than 1108 companies without a status also. I thought removing them will unnecesserily decrease the dataset as these startups could represent some marginalized regions.</p>
 <p>So, let’s find if the number of funding rounds increase with a country’s GDP or not to understand the economic impact!</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"scatter"</span>, <span class="at">x =</span> df_invest_cp<span class="sc">$</span>gdpPercap, </span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> df_invest_cp<span class="sc">$</span>funding_rounds, </span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Country Wealth vs. Investment Rounds"</span>, </span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"GDP per Capita"</span>, <span class="at">ylab =</span> <span class="st">"Number of Funding Rounds"</span>,</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">16</span>, <span class="at">col =</span> <span class="fu">adjustcolor</span>(<span class="st">"red"</span>, <span class="at">alpha.f =</span> <span class="fl">0.1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"scatter"</span>, <span class="at">x =</span> df_invest_cp<span class="sc">$</span>gdpPercap, </span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>       <span class="at">y =</span> df_invest_cp<span class="sc">$</span>funding_rounds, </span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>       <span class="at">title =</span> <span class="st">"Country Wealth vs. Investment Rounds"</span>, </span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>       <span class="at">xlab =</span> <span class="st">"GDP per Capita"</span>, <span class="at">ylab =</span> <span class="st">"Number of Funding Rounds"</span>,</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>       <span class="at">pch =</span> <span class="dv">16</span>, <span class="at">col =</span> <span class="fu">adjustcolor</span>(<span class="st">"red"</span>, <span class="at">alpha.f =</span> <span class="fl">0.1</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -503,25 +514,26 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>Yes, it is affecting the low GDP countries, but also affects the high GDP countries. I think that high GDP countries citizens aren’t very interested in filling the requirements of the usual funding rounds of startups or may be the higher level of regulations hinder them, or may be got acquired after less number of rounds. The explanation needs more investigation from my opinion to find the confounding factor.</p>
+<p>Yes, it is affecting the low GDP countries, but also affects the high GDP countries. I think that high GDP countries citizens might not very interested in filling the requirements of the usual funding rounds of startups, or may be the higher level of regulations hinder them, or may be got acquired instantly without going to funding rounds. Anyway, there is a clear gap, and the explanation needs more investigation from my opinion to find the confounding factors.</p>
 <p>Let’s find how many funding rounds do companies usually go through?</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># After thinking for some time, this visualization needs </span></span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co"># the calculation of the cumulative sum</span></span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> <span class="fu">table</span>(df_invest_cp<span class="sc">$</span>funding_rounds)</span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>total_startups <span class="ot">&lt;-</span> <span class="fu">sum</span>(counts)</span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate how many dropped out at each stage</span></span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>dropped_out <span class="ot">&lt;-</span> <span class="fu">cumsum</span>(counts)</span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Subtracting the total startups number from each round acc. sum</span></span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a><span class="co"># then I added the original counts (frequencies per funding round)</span></span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>cum_rounds <span class="ot">&lt;-</span> (total_startups <span class="sc">-</span> dropped_out) <span class="sc">+</span> counts</span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">round</span>((cum_rounds <span class="sc">/</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(df_invest_cp<span class="sc">$</span>funding_rounds))) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>),</span>
-<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Percentage of companies per Funding Rounds"</span>, <span class="at">xlab =</span> <span class="st">"Number of Rounds"</span>,</span>
-<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">ylab  =</span> <span class="st">"Percentage of Companies (%)"</span>,</span>
-<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">col =</span> <span class="st">"yellow"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># After thinking for some time, this visualization needs </span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a><span class="co"># the calculation of the cumulative sum as the startup that funded for 18 </span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a><span class="co"># rounds must have passed through the first, second till the 17th rounds</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>counts <span class="ot">&lt;-</span> <span class="fu">table</span>(df_invest_cp<span class="sc">$</span>funding_rounds)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>total_startups <span class="ot">&lt;-</span> <span class="fu">sum</span>(counts)</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate how many dropped out at each stage</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>dropped_out <span class="ot">&lt;-</span> <span class="fu">cumsum</span>(counts)</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a><span class="co"># Subtracting the total startups number from each round acc. sum</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a><span class="co"># then I added the original counts (frequencies per funding round)</span></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>cum_rounds <span class="ot">&lt;-</span> (total_startups <span class="sc">-</span> dropped_out) <span class="sc">+</span> counts</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">round</span>((cum_rounds <span class="sc">/</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(df_invest_cp<span class="sc">$</span>funding_rounds))) <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">1</span>),</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>  <span class="at">title =</span> <span class="st">"Percentage of companies per Funding Rounds"</span>, <span class="at">xlab =</span> <span class="st">"Number of Rounds"</span>,</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>  <span class="at">ylab  =</span> <span class="st">"Percentage of Companies (%)"</span>,</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>  <span class="at">col =</span> <span class="st">"yellow"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -530,19 +542,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>It is clear that almost the third of the startups that got their first round, will go through a second one, but this gap narrowed after that from the third to almost the half. So, we can call the second round a statistical bottleneck for more rounds.</p>
+<p>Almost the third of the startups that got their first round, will go through a second one, but this gap narrowed after that from the third to the half. So, we can call the second round a statistical bottleneck for more rounds.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate mean funding by income group</span></span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>mean_funding <span class="ot">&lt;-</span> <span class="fu">round</span>(<span class="fu">tapply</span>(df_invest_cp<span class="sc">$</span>funding_total_usd, df_invest_cp<span class="sc">$</span>income, mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)<span class="sc">/</span><span class="dv">100000</span>, <span class="dv">0</span>)</span>
-<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting the means, a par added here to fit this specific graph</span></span>
-<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a><span class="fu">par</span>(<span class="at">mgp =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">2</span>))</span>
-<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, </span>
-<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">x =</span> mean_funding, <span class="at">ylab =</span> <span class="st">"Mean funding by 100K"</span>,</span>
-<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="st">"Mean Funding by Income Group"</span>, <span class="at">las =</span> <span class="dv">2</span>)</span>
-<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating the mean funding by income group then added as the x</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Plotting the means, a par added here to fit this specific graph</span></span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">par</span>(<span class="at">mgp =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">2</span>))</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, </span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>         <span class="at">x =</span> <span class="fu">round</span>(<span class="fu">tapply</span>(df_invest_cp<span class="sc">$</span>funding_total_usd, df_invest_cp<span class="sc">$</span>income,</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>                          mean, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)<span class="sc">/</span><span class="dv">100000</span>, <span class="dv">0</span>),</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>         <span class="at">ylab =</span> <span class="st">"Mean funding by 100K"</span>,</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="st">"Mean Funding by Income Group"</span>, <span class="at">las =</span> <span class="dv">2</span>)</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -551,31 +562,44 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>It is misleading to get conclusion from this graph only, but knowing the population of these economic categories would reveal a lot.</p>
+<p>It is misleading to get conclusions from this graph or GDP graph directly, but knowing the population of these economic categories might reveal different conclusions.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the mean funding for each category</span></span>
-<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>mean_funding <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(funding_total_usd <span class="sc">~</span> income, <span class="at">data =</span> df_invest_cp, </span>
-<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">FUN =</span> mean)</span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the population for each category (assuming it is a unique value per category)</span></span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>pop_by_income <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(pop <span class="sc">~</span> income, </span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>                           <span class="at">data =</span> <span class="fu">unique</span>(df_invest_cp[, <span class="fu">c</span>(<span class="st">"country_code"</span>,</span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>                                                          <span class="st">"income"</span>, <span class="st">"pop"</span>)]), </span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>                           <span class="at">FUN =</span> sum)</span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Merging both tables and divide</span></span>
-<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>final_result <span class="ot">&lt;-</span> <span class="fu">merge</span>(mean_funding, pop_by_income, <span class="at">by =</span> <span class="st">"income"</span>)</span>
-<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>final_result<span class="sc">$</span>fund_access <span class="ot">&lt;-</span> <span class="fu">round</span>(final_result<span class="sc">$</span>funding_total_usd <span class="sc">/</span> final_result<span class="sc">$</span>pop, <span class="dv">4</span>)</span>
-<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>final_result <span class="ot">&lt;-</span> final_result[<span class="fu">order</span>(final_result<span class="sc">$</span>fund_access, <span class="at">decreasing =</span> <span class="cn">TRUE</span>), ]</span>
-<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">par</span>(<span class="at">mgp =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">2</span>))</span>
-<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">sort</span>(<span class="fu">tapply</span>(final_result<span class="sc">$</span>fund_access,</span>
-<span id="cb32-19"><a href="#cb32-19" aria-hidden="true" tabindex="-1"></a>                                  final_result<span class="sc">$</span>income, unique), </span>
-<span id="cb32-20"><a href="#cb32-20" aria-hidden="true" tabindex="-1"></a>                                <span class="at">decreasing =</span> <span class="cn">TRUE</span>), </span>
-<span id="cb32-21"><a href="#cb32-21" aria-hidden="true" tabindex="-1"></a>         <span class="at">ylab =</span> <span class="st">"Fund accessibility for startups"</span>, </span>
-<span id="cb32-22"><a href="#cb32-22" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="st">"Startups Funding Access Per Economy"</span>, <span class="at">las =</span> <span class="dv">2</span>)</span>
-<span id="cb32-23"><a href="#cb32-23" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate the mean funding for each category</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>mean_funding <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(funding_total_usd <span class="sc">~</span> income, <span class="at">data =</span> df_invest_cp, </span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">FUN =</span> mean)</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Get the population for each category (assuming it is a unique value per category)</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>pop_by_income <span class="ot">&lt;-</span> <span class="fu">aggregate</span>(pop <span class="sc">~</span> income, </span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>                           <span class="at">data =</span> <span class="fu">unique</span>(df_invest_cp[, <span class="fu">c</span>(<span class="st">"country_code"</span>,</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>                                                          <span class="st">"income"</span>, <span class="st">"pop"</span>)]), </span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>                           <span class="at">FUN =</span> sum)</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Merging both tables and divide</span></span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>final_result <span class="ot">&lt;-</span> <span class="fu">merge</span>(mean_funding, pop_by_income, <span class="at">by =</span> <span class="st">"income"</span>)</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>final_result<span class="sc">$</span>fund_access <span class="ot">&lt;-</span> <span class="fu">round</span>(final_result<span class="sc">$</span>funding_total_usd <span class="sc">/</span> final_result<span class="sc">$</span>pop, <span class="dv">4</span>)</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>final_result <span class="ot">&lt;-</span> final_result[<span class="fu">order</span>(final_result<span class="sc">$</span>fund_access, <span class="at">decreasing =</span> <span class="cn">TRUE</span>), ]</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Setting the layout (1 row, 2 columns)</span></span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>), <span class="at">mgp =</span> <span class="fu">c</span>(<span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">0</span>), <span class="at">mar =</span> <span class="fu">c</span>(<span class="dv">10</span>, <span class="dv">6</span>, <span class="dv">4</span>, <span class="dv">2</span>))</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb35-20"><a href="#cb35-20" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plotting the Population by Income</span></span>
+<span id="cb35-21"><a href="#cb35-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="fu">sort</span>(<span class="fu">round</span>(<span class="fu">tapply</span>(final_result<span class="sc">$</span>pop,</span>
+<span id="cb35-22"><a href="#cb35-22" aria-hidden="true" tabindex="-1"></a>                                         final_result<span class="sc">$</span>income, sum) <span class="sc">/</span> </span>
+<span id="cb35-23"><a href="#cb35-23" aria-hidden="true" tabindex="-1"></a>                                    <span class="dv">100000000</span>, <span class="dv">1</span>), <span class="at">decreasing =</span> <span class="cn">TRUE</span>), </span>
+<span id="cb35-24"><a href="#cb35-24" aria-hidden="true" tabindex="-1"></a>         <span class="at">ylab =</span> <span class="st">"Total Population in 100M"</span>, </span>
+<span id="cb35-25"><a href="#cb35-25" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="st">"Population per Income Group"</span>, <span class="at">las =</span> <span class="dv">2</span>)</span>
+<span id="cb35-26"><a href="#cb35-26" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb35-27"><a href="#cb35-27" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Plotting the Funding Access</span></span>
+<span id="cb35-28"><a href="#cb35-28" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, <span class="at">x =</span> <span class="fu">sort</span>(<span class="fu">tapply</span>(final_result<span class="sc">$</span>fund_access, </span>
+<span id="cb35-29"><a href="#cb35-29" aria-hidden="true" tabindex="-1"></a>                           final_result<span class="sc">$</span>income, unique), </span>
+<span id="cb35-30"><a href="#cb35-30" aria-hidden="true" tabindex="-1"></a>                    <span class="at">decreasing =</span> <span class="cn">TRUE</span>), </span>
+<span id="cb35-31"><a href="#cb35-31" aria-hidden="true" tabindex="-1"></a>         <span class="at">ylab =</span> <span class="st">"Fund accessibility for startups"</span>, </span>
+<span id="cb35-32"><a href="#cb35-32" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="st">"Startups Funding Access"</span>, <span class="at">las =</span> <span class="dv">2</span>)</span>
+<span id="cb35-33"><a href="#cb35-33" aria-hidden="true" tabindex="-1"></a>  </span>
+<span id="cb35-34"><a href="#cb35-34" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Resetting layout to 1x1 so future plots aren't affected</span></span>
+<span id="cb35-35"><a href="#cb35-35" aria-hidden="true" tabindex="-1"></a>  <span class="fu">par</span>(<span class="at">mfrow =</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>))</span>
+<span id="cb35-36"><a href="#cb35-36" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -584,36 +608,38 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 </div>
-<p>This ensures that the accessibility to fund to High income countries is higher than the low income countries according regarding population. It is the douplicated in “High income” countries than “Low income” countries.</p>
-<p>Now, I want to predict the success of the Startups. The success here means the startup got acquired by another company. The failure here is closed startup.</p>
+<p>These two graphs ensures that the accessibility to fund in High income countries is higher than the low income countries according to population. It is duplicated in “High income” countries than “Low income” countries. Although, the “Lower Middle Income” &amp; “Upper Middle Income” countries have much higher populations, but their access to fund regarding their population is still uneven. This shows the unfair access to fund in the world.</p>
+<p>Now, I try to predict the success of Startups. The success here means the startup got acquired by another company. The failure here is “closed” startup. (I used AI to help me with this prediction part, under my supervision.)</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>cols_to_keep <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"status"</span>, <span class="st">"funding_total_usd"</span>, <span class="st">"funding_rounds"</span>, </span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"founded_year"</span>, <span class="st">"seed"</span>, <span class="st">"venture"</span>, <span class="st">"angel"</span>, </span>
-<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"income"</span>, <span class="st">"Region"</span>)</span>
-<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>df_model <span class="ot">&lt;-</span> df_invest_cp[, cols_to_keep]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The columns I decided to use in the prediction where status is y </span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="co"># and the rest of columns are predictors</span></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>cols_to_keep <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"status"</span>, <span class="st">"funding_total_usd"</span>, <span class="st">"funding_rounds"</span>, </span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"founded_year"</span>, <span class="st">"seed"</span>, <span class="st">"venture"</span>, <span class="st">"angel"</span>, </span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>                  <span class="st">"income"</span>, <span class="st">"Region"</span>)</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>df_model <span class="ot">&lt;-</span> df_invest_cp[, cols_to_keep]</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creation of a subset of only 'acquired' and 'closed'</span></span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>df_exited <span class="ot">&lt;-</span> df_model[df_model<span class="sc">$</span>status <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"acquired"</span>, <span class="st">"closed"</span>), ]</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Defining the target: </span></span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 for Success (Acquired)</span></span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 0 for Failure (Closed)</span></span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>df_exited<span class="sc">$</span>is_success <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(df_exited<span class="sc">$</span>status <span class="sc">==</span> <span class="st">"acquired"</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning up any other levels in the factor</span></span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>df_exited<span class="sc">$</span>status <span class="ot">&lt;-</span> <span class="fu">factor</span>(df_exited<span class="sc">$</span>status)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Creation of a subset of only 'acquired' and 'closed'</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>df_exited <span class="ot">&lt;-</span> df_model[df_model<span class="sc">$</span>status <span class="sc">%in%</span> <span class="fu">c</span>(<span class="st">"acquired"</span>, <span class="st">"closed"</span>), ]</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Defining the target: </span></span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a><span class="co"># 1 for Success (Acquired)</span></span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a><span class="co"># 0 for Failure (Closed)</span></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>df_exited<span class="sc">$</span>is_success <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(df_exited<span class="sc">$</span>status <span class="sc">==</span> <span class="st">"acquired"</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning up any other levels in the factor</span></span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>df_exited<span class="sc">$</span>status <span class="ot">&lt;-</span> <span class="fu">factor</span>(df_exited<span class="sc">$</span>status)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Build the model</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>exit_model <span class="ot">&lt;-</span> <span class="fu">glm</span>(is_success <span class="sc">~</span> funding_total_usd <span class="sc">+</span> funding_rounds <span class="sc">+</span> </span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>                    founded_year <span class="sc">+</span> seed <span class="sc">+</span> venture <span class="sc">+</span> angel <span class="sc">+</span> income <span class="sc">+</span> Region, </span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">data =</span> df_exited)</span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(exit_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">123</span>)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Build the model</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>exit_model <span class="ot">&lt;-</span> <span class="fu">glm</span>(is_success <span class="sc">~</span> funding_total_usd <span class="sc">+</span> funding_rounds <span class="sc">+</span> </span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>                    founded_year <span class="sc">+</span> seed <span class="sc">+</span> venture <span class="sc">+</span> angel <span class="sc">+</span> income <span class="sc">+</span> Region, </span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>                  <span class="at">family =</span> <span class="st">"binomial"</span>, <span class="at">data =</span> df_exited)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(exit_model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>
 Call:
@@ -655,12 +681,12 @@ Number of Fisher Scoring iterations: 12</code></pre>
 <p>Each additional round of funding significantly increases the chances of being acquired. This means that the continuous successful funding rounds is an indicator for successful exit (make sense).</p>
 <p>While total funding is neutral, specifically having Venture funding has a positive, significant impact.</p>
 <p>Being based in North America shows a strong positive correlation with acquisition.</p>
-<p>Founded Year coefficient is highly negative. This means, as the year goes up (newer companies), the likelihood of having been acquired goes down. This makes sense also as older companies have had more time to exit.</p>
-<p>Surprisingly, higher seed funding has a tiny but statistically significant negative impact on the probability of acquisition in this model. This could imply that companies that highly depend on seed without moving to venture are less likely to exit.</p>
+<p>Founded Year coefficient is highly negative. This means, as the year goes up (newer companies), the likelihood of having been acquired goes down. This makes sense also as older companies have had more time to exit and achieve higher revenues and higher potential for investors.</p>
+<p>Surprisingly, higher seed funding has a tiny but statistically significant negative impact on the probability of acquisition in this model. This could imply that companies that highly depend on seed without moving to venture are less likely to exit. This makes sense as ventures are more involved in investors’ network and have a clear benefit from selling the company.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>exit_preds <span class="ot">&lt;-</span> <span class="fu">predict</span>(exit_model, df_exited, <span class="at">type =</span> <span class="st">"response"</span>)</span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>exit_class <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(exit_preds <span class="sc">&gt;</span> <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
-<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">Predicted =</span> exit_class, <span class="at">Actual =</span> df_exited<span class="sc">$</span>is_success)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a>exit_preds <span class="ot">&lt;-</span> <span class="fu">predict</span>(exit_model, df_exited, <span class="at">type =</span> <span class="st">"response"</span>)</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>exit_class <span class="ot">&lt;-</span> <span class="fu">ifelse</span>(exit_preds <span class="sc">&gt;</span> <span class="fl">0.5</span>, <span class="dv">1</span>, <span class="dv">0</span>)</span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(<span class="at">Predicted =</span> exit_class, <span class="at">Actual =</span> df_exited<span class="sc">$</span>is_success)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>         Actual
 Predicted    0    1
@@ -669,23 +695,23 @@ Predicted    0    1
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>conf_matrix <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="at">Predicted =</span> exit_class, <span class="at">Actual =</span> df_exited<span class="sc">$</span>is_success)</span>
-<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating Accuracy</span></span>
-<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Formula: (True Positives + True Negatives) / Total</span></span>
-<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>accuracy <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">diag</span>(conf_matrix)) <span class="sc">/</span> <span class="fu">sum</span>(conf_matrix)</span>
-<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a><span class="fu">paste0</span>(<span class="st">"Accuracy of the model is: "</span>, <span class="fu">round</span>(accuracy <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">2</span>), <span class="st">"%"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a>conf_matrix <span class="ot">&lt;-</span> <span class="fu">table</span>(<span class="at">Predicted =</span> exit_class, <span class="at">Actual =</span> df_exited<span class="sc">$</span>is_success)</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculating Accuracy</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Formula: (True Positives + True Negatives) / Total</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>accuracy <span class="ot">&lt;-</span> <span class="fu">sum</span>(<span class="fu">diag</span>(conf_matrix)) <span class="sc">/</span> <span class="fu">sum</span>(conf_matrix)</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a><span class="fu">paste0</span>(<span class="st">"Accuracy of the model is: "</span>, <span class="fu">round</span>(accuracy <span class="sc">*</span> <span class="dv">100</span>, <span class="dv">2</span>), <span class="st">"%"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[1] "Accuracy of the model is: 71.5%"</code></pre>
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparison of the predicted probabilities of the two groups</span></span>
-<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"box"</span>, <span class="at">x =</span> exit_preds, <span class="at">y =</span> df_exited<span class="sc">$</span>is_success, <span class="at">range =</span> <span class="dv">0</span>,</span>
-<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">title =</span> <span class="st">"Predicted Probability: Acquired (1) vs Closed (0)"</span>,</span>
-<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">"0=Closed, 1=Acquired"</span>, </span>
-<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Probability of Success"</span>,</span>
-<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"red"</span>, <span class="st">"green"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Comparison of the predicted probabilities of the two groups</span></span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"box"</span>, <span class="at">x =</span> exit_preds, <span class="at">y =</span> df_exited<span class="sc">$</span>is_success, <span class="at">range =</span> <span class="dv">0</span>,</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>        <span class="at">title =</span> <span class="st">"Predicted Probability: Acquired (1) vs Closed (0)"</span>,</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>        <span class="at">xlab =</span> <span class="st">"0=Closed, 1=Acquired"</span>, </span>
+<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>        <span class="at">ylab =</span> <span class="st">"Probability of Success"</span>,</span>
+<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>        <span class="at">col =</span> <span class="fu">c</span>(<span class="st">"red"</span>, <span class="st">"green"</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -695,31 +721,31 @@ Predicted    0    1
 </div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add the predictions back to the filtered 'exited' dataframe</span></span>
-<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>df_exited<span class="sc">$</span>predicted_class <span class="ot">&lt;-</span> exit_class</span>
-<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify the 'False Negatives' (Actual: Acquired, Predicted: Closed)</span></span>
-<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="co"># These are the 891 companies</span></span>
-<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>surprising_acquisitions_data <span class="ot">&lt;-</span> df_exited[df_exited<span class="sc">$</span>is_success <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> df_exited<span class="sc">$</span>predicted_class <span class="sc">==</span> <span class="dv">0</span>, ]</span>
-<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Pulling the names from the original dataframe using the row indices</span></span>
-<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a><span class="co"># I used the company name column to identify them</span></span>
-<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a>surprising_names <span class="ot">&lt;-</span> df_invest_cp[<span class="fu">rownames</span>(surprising_acquisitions_data), <span class="fu">c</span>(<span class="st">"name"</span>, <span class="st">"market"</span>, <span class="st">"funding_total_usd"</span>, <span class="st">"funding_rounds"</span>, <span class="st">"country_name"</span>, <span class="st">"Region"</span>)]</span>
-<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the first 20 Markets of unpredicted successful companies</span></span>
-<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>surprising_names20 <span class="ot">&lt;-</span> <span class="fu">head</span>(<span class="fu">sort</span>(<span class="fu">table</span>(surprising_names<span class="sc">$</span>market), </span>
-<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>                                <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="dv">20</span>)</span>
-<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning all the names of unpredicted successful companies</span></span>
-<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>surprising_names <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(surprising_names)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add the predictions back to the filtered 'exited' dataframe</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>df_exited<span class="sc">$</span>predicted_class <span class="ot">&lt;-</span> exit_class</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Identify the 'False Negatives' (Actual: Acquired, Predicted: Closed)</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a><span class="co"># These are the 891 companies</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>surprising_acquisitions_data <span class="ot">&lt;-</span> df_exited[df_exited<span class="sc">$</span>is_success <span class="sc">==</span> <span class="dv">1</span> <span class="sc">&amp;</span> df_exited<span class="sc">$</span>predicted_class <span class="sc">==</span> <span class="dv">0</span>, ]</span>
+<span id="cb45-7"><a href="#cb45-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-8"><a href="#cb45-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Pulling the names from the original dataframe using the row indices</span></span>
+<span id="cb45-9"><a href="#cb45-9" aria-hidden="true" tabindex="-1"></a><span class="co"># I used the company name column to identify them</span></span>
+<span id="cb45-10"><a href="#cb45-10" aria-hidden="true" tabindex="-1"></a>surprising_names <span class="ot">&lt;-</span> df_invest_cp[<span class="fu">rownames</span>(surprising_acquisitions_data), <span class="fu">c</span>(<span class="st">"name"</span>, <span class="st">"market"</span>, <span class="st">"funding_total_usd"</span>, <span class="st">"funding_rounds"</span>, <span class="st">"country_name"</span>, <span class="st">"Region"</span>)]</span>
+<span id="cb45-11"><a href="#cb45-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-12"><a href="#cb45-12" aria-hidden="true" tabindex="-1"></a><span class="co"># Saving the first 20 Markets of unpredicted successful companies</span></span>
+<span id="cb45-13"><a href="#cb45-13" aria-hidden="true" tabindex="-1"></a>surprising_names20 <span class="ot">&lt;-</span> <span class="fu">head</span>(<span class="fu">sort</span>(<span class="fu">table</span>(surprising_names<span class="sc">$</span>market), </span>
+<span id="cb45-14"><a href="#cb45-14" aria-hidden="true" tabindex="-1"></a>                                <span class="at">decreasing =</span> <span class="cn">TRUE</span>), <span class="dv">20</span>)</span>
+<span id="cb45-15"><a href="#cb45-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-16"><a href="#cb45-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Cleaning all the names of unpredicted successful companies</span></span>
+<span id="cb45-17"><a href="#cb45-17" aria-hidden="true" tabindex="-1"></a>surprising_names <span class="ot">&lt;-</span> <span class="fu">na.omit</span>(surprising_names)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>{</span>
-<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">par</span>(<span class="at">mar =</span> <span class="fu">c</span>(<span class="fl">10.5</span>, <span class="dv">4</span>, <span class="dv">2</span>, <span class="dv">2</span>))</span>
-<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, surprising_names20, <span class="at">las =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"green"</span>, </span>
-<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">title =</span> <span class="st">"Top 20 Markets for Successful Acquisitions"</span>,</span>
-<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">ylab =</span> <span class="st">"Number of Companies"</span>)</span>
-<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a>{</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">par</span>(<span class="at">mar =</span> <span class="fu">c</span>(<span class="fl">10.5</span>, <span class="dv">4</span>, <span class="dv">2</span>, <span class="dv">2</span>))</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">visual</span>(<span class="at">type =</span> <span class="st">"bar"</span>, surprising_names20, <span class="at">las =</span> <span class="dv">2</span>, <span class="at">col =</span> <span class="st">"green"</span>, </span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>                <span class="at">title =</span> <span class="st">"Top 20 Markets for Successful Acquisitions"</span>,</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>                <span class="at">ylab =</span> <span class="st">"Number of Companies"</span>)</span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>}</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -730,12 +756,12 @@ Predicted    0    1
 </div>
 <p>Checking the possible reasons behind unprediction</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(<span class="fu">list</span>(<span class="at">original =</span> df_invest_cp[df_invest_cp<span class="sc">$</span>status <span class="sc">==</span> <span class="st">"acquired"</span>, ], </span>
-<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">unpredicte =</span> surprising_names),</span>
-<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a>       <span class="cf">function</span>(df) {</span>
-<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a>         <span class="fu">c</span>(<span class="at">Mean_Funding_100K =</span> <span class="fu">mean</span>(df<span class="sc">$</span>funding_total_usd <span class="sc">/</span> <span class="dv">100000</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
-<span id="cb44-5"><a href="#cb44-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">Mean_Rounds =</span> <span class="fu">mean</span>(df<span class="sc">$</span>funding_rounds, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
-<span id="cb44-6"><a href="#cb44-6" aria-hidden="true" tabindex="-1"></a>       })</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sapply</span>(<span class="fu">list</span>(<span class="at">original =</span> df_invest_cp[df_invest_cp<span class="sc">$</span>status <span class="sc">==</span> <span class="st">"acquired"</span>, ], </span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a>            <span class="at">unpredicte =</span> surprising_names),</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a>       <span class="cf">function</span>(df) {</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a>         <span class="fu">c</span>(<span class="at">Mean_Funding_100K =</span> <span class="fu">mean</span>(df<span class="sc">$</span>funding_total_usd <span class="sc">/</span> <span class="dv">100000</span>, <span class="at">na.rm =</span> <span class="cn">TRUE</span>),</span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a>           <span class="at">Mean_Rounds =</span> <span class="fu">mean</span>(df<span class="sc">$</span>funding_rounds, <span class="at">na.rm =</span> <span class="cn">TRUE</span>))</span>
+<span id="cb47-6"><a href="#cb47-6" aria-hidden="true" tabindex="-1"></a>       })</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>                    original unpredicte
 Mean_Funding_100K 244.215559  45.879227
@@ -744,23 +770,23 @@ Mean_Rounds         2.052707   1.154303</code></pre>
 </div>
 <p>The difference between means require more investigation, so let’s test the significance of this difference.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Defining the two comparison groups</span></span>
-<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>group_original <span class="ot">&lt;-</span> df_invest_cp[df_invest_cp<span class="sc">$</span>status <span class="sc">==</span> <span class="st">"acquired"</span>, ]</span>
-<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>group_surprising <span class="ot">&lt;-</span> surprising_names</span>
-<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Defining the columns I want to test</span></span>
-<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>cols_to_test <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"funding_total_usd"</span>, <span class="st">"funding_rounds"</span>)</span>
-<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Running the t-test for each column</span></span>
-<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>t_results <span class="ot">&lt;-</span> <span class="fu">sapply</span>(cols_to_test, <span class="cf">function</span>(col) {</span>
-<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>  test <span class="ot">&lt;-</span> <span class="fu">t.test</span>(group_original[[col]], group_surprising[[col]], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
-<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">p_value =</span> test<span class="sc">$</span>p.value, </span>
-<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">t_stat =</span> <span class="fu">round</span>(test<span class="sc">$</span>statistic, <span class="dv">5</span>),</span>
-<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">significant =</span> <span class="fu">ifelse</span>(test<span class="sc">$</span>p.value <span class="sc">&lt;</span> <span class="fl">0.05</span>, <span class="st">"YES"</span>, <span class="st">"NO"</span>))</span>
-<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>  })</span>
-<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the results</span></span>
-<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t_results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Defining the two comparison groups</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>group_original <span class="ot">&lt;-</span> df_invest_cp[df_invest_cp<span class="sc">$</span>status <span class="sc">==</span> <span class="st">"acquired"</span>, ]</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a>group_surprising <span class="ot">&lt;-</span> surprising_names</span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-5"><a href="#cb49-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Defining the columns I want to test</span></span>
+<span id="cb49-6"><a href="#cb49-6" aria-hidden="true" tabindex="-1"></a>cols_to_test <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"funding_total_usd"</span>, <span class="st">"funding_rounds"</span>)</span>
+<span id="cb49-7"><a href="#cb49-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-8"><a href="#cb49-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Running the t-test for each column</span></span>
+<span id="cb49-9"><a href="#cb49-9" aria-hidden="true" tabindex="-1"></a>t_results <span class="ot">&lt;-</span> <span class="fu">sapply</span>(cols_to_test, <span class="cf">function</span>(col) {</span>
+<span id="cb49-10"><a href="#cb49-10" aria-hidden="true" tabindex="-1"></a>  test <span class="ot">&lt;-</span> <span class="fu">t.test</span>(group_original[[col]], group_surprising[[col]], <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb49-11"><a href="#cb49-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(<span class="at">p_value =</span> test<span class="sc">$</span>p.value, </span>
+<span id="cb49-12"><a href="#cb49-12" aria-hidden="true" tabindex="-1"></a>  <span class="at">t_stat =</span> <span class="fu">round</span>(test<span class="sc">$</span>statistic, <span class="dv">5</span>),</span>
+<span id="cb49-13"><a href="#cb49-13" aria-hidden="true" tabindex="-1"></a>  <span class="at">significant =</span> <span class="fu">ifelse</span>(test<span class="sc">$</span>p.value <span class="sc">&lt;</span> <span class="fl">0.05</span>, <span class="st">"YES"</span>, <span class="st">"NO"</span>))</span>
+<span id="cb49-14"><a href="#cb49-14" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb49-15"><a href="#cb49-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb49-16"><a href="#cb49-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Display the results</span></span>
+<span id="cb49-17"><a href="#cb49-17" aria-hidden="true" tabindex="-1"></a><span class="fu">print</span>(t_results)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>            funding_total_usd      funding_rounds         
 p_value     "6.02707781220463e-18" "4.65514529618924e-133"
@@ -768,7 +794,8 @@ t_stat.t    "8.68069"              "27.46714"
 significant "YES"                  "YES"                  </code></pre>
 </div>
 </div>
-<p>According to t.test result, the difference between the means of these two columns in the unpredicted dataset and the whole dataset, shows statistical significance. This explain the unpredictability of these companies as a successful companies by the model. Note, I just tested the numeric columns, the other columns like “country”, “Region” and “market”, could have their weight too.</p>
+<p>According to t.test result, the difference between the means of these two columns in the unpredicted dataset and the whole “acquired” dataset, shows statistical significance. This explain the unpredictability of these companies as a successful companies by the model.</p>
+<p>Note, I just tested the numeric columns, the other columns like “country”, “Region” and “market”, could have their weight too.</p>
 
 </main>
 <!-- /main column -->
